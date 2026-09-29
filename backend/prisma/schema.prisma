@@ -1,0 +1,316 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum PollStatus {
+  DRAFT
+  SCHEDULED
+  ACTIVE
+  PAUSED
+  CLOSED
+  ARCHIVED
+}
+
+enum PollType {
+  GENERAL
+  POLITICAL
+  CAMPAIGN
+  PUBLIC_SERVICE
+  RESEARCH
+}
+
+enum PositionScope {
+  NATIONAL
+  COUNTY
+  CONSTITUENCY
+  WARD
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  ANALYST
+}
+
+model County {
+  id   String @id @default(cuid())
+  code Int    @unique
+  name String @unique
+
+  constituencies Constituency[]
+  candidates     Candidate[]
+  responses      Response[]
+
+  targetPolls Poll[] @relation("PollTargetCounty")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Constituency {
+  id   String @id @default(cuid())
+  code String @unique
+  name String
+
+  countyId String
+  county   County @relation(fields: [countyId], references: [id], onDelete: Cascade)
+
+  wards      Ward[]
+  candidates Candidate[]
+  responses  Response[]
+
+  targetPolls Poll[] @relation("PollTargetConstituency")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([countyId, name])
+  @@index([countyId])
+}
+
+model Ward {
+  id   String @id @default(cuid())
+  code String @unique
+  name String
+
+  constituencyId String
+  constituency   Constituency @relation(fields: [constituencyId], references: [id], onDelete: Cascade)
+
+  candidates Candidate[]
+  responses  Response[]
+
+  targetPolls Poll[] @relation("PollTargetWard")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([constituencyId, name])
+  @@index([constituencyId])
+}
+
+model Position {
+  id          String        @id @default(cuid())
+  name        String        @unique
+  scope       PositionScope
+  description String?
+  isActive    Boolean       @default(true)
+
+  candidates Candidate[]
+  polls      Poll[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Candidate {
+  id          String  @id @default(cuid())
+  name        String
+  party       String?
+  photoUrl    String?
+  description String?
+  isActive    Boolean @default(true)
+
+  positionId String
+  position   Position @relation(fields: [positionId], references: [id], onDelete: Cascade)
+
+  countyId String?
+  county   County? @relation(fields: [countyId], references: [id], onDelete: SetNull)
+
+  constituencyId String?
+  constituency   Constituency? @relation(fields: [constituencyId], references: [id], onDelete: SetNull)
+
+  wardId String?
+  ward   Ward?   @relation(fields: [wardId], references: [id], onDelete: SetNull)
+
+  pollOptions PollOption[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([positionId])
+  @@index([countyId])
+  @@index([constituencyId])
+  @@index([wardId])
+}
+
+model Campaign {
+  id           String  @id @default(cuid())
+  name         String
+  organization String?
+  description  String?
+  isActive     Boolean @default(true)
+
+  polls Poll[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive])
+}
+
+model Poll {
+  id          String  @id @default(cuid())
+  title       String
+  description String?
+
+  type PollType @default(GENERAL)
+
+  status PollStatus @default(DRAFT)
+
+  positionId String?
+  position   Position? @relation(fields: [positionId], references: [id], onDelete: SetNull)
+
+  campaignId String?
+  campaign   Campaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+
+  sponsorName         String?
+  sponsorOrganization String?
+
+  disclosureNote  String?
+  methodologyNote String?
+
+  targetCountyId String?
+  targetCounty   County? @relation("PollTargetCounty", fields: [targetCountyId], references: [id], onDelete: SetNull)
+
+  targetConstituencyId String?
+  targetConstituency   Constituency? @relation("PollTargetConstituency", fields: [targetConstituencyId], references: [id], onDelete: SetNull)
+
+  targetWardId String?
+  targetWard   Ward?   @relation("PollTargetWard", fields: [targetWardId], references: [id], onDelete: SetNull)
+
+  startsAt DateTime?
+  endsAt   DateTime?
+
+  allowResults Boolean @default(true)
+  isPublic     Boolean @default(true)
+
+  questions PollQuestion[]
+  responses Response[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([type])
+  @@index([positionId])
+  @@index([campaignId])
+  @@index([targetCountyId])
+  @@index([targetConstituencyId])
+  @@index([targetWardId])
+  @@index([createdAt])
+}
+
+model PollQuestion {
+  id String @id @default(cuid())
+
+  pollId String
+  poll   Poll   @relation(fields: [pollId], references: [id], onDelete: Cascade)
+
+  question    String
+  description String?
+  order       Int     @default(0)
+  isRequired  Boolean @default(true)
+
+  options   PollOption[]
+  responses Response[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([pollId])
+}
+
+model PollOption {
+  id String @id @default(cuid())
+
+  questionId String
+  question   PollQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  label String
+  value String?
+
+  candidateId String?
+  candidate   Candidate? @relation(fields: [candidateId], references: [id], onDelete: SetNull)
+
+  order    Int     @default(0)
+  isActive Boolean @default(true)
+
+  responses Response[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([questionId])
+  @@index([candidateId])
+}
+
+model Participant {
+  id String @id @default(cuid())
+
+  tokenHash String @unique
+
+  firstSeenAt DateTime @default(now())
+  lastSeenAt  DateTime @default(now())
+
+  responses Response[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Response {
+  id String @id @default(cuid())
+
+  pollId String
+  poll   Poll   @relation(fields: [pollId], references: [id], onDelete: Cascade)
+
+  questionId String
+  question   PollQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  optionId String
+  option   PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+
+  participantId String
+  participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+
+  countyId String?
+  county   County? @relation(fields: [countyId], references: [id], onDelete: SetNull)
+
+  constituencyId String?
+  constituency   Constituency? @relation(fields: [constituencyId], references: [id], onDelete: SetNull)
+
+  wardId String?
+  ward   Ward?   @relation(fields: [wardId], references: [id], onDelete: SetNull)
+
+  ipHash        String?
+  userAgentHash String?
+
+  createdAt DateTime @default(now())
+
+  @@unique([pollId, questionId, participantId])
+  @@index([pollId])
+  @@index([questionId])
+  @@index([optionId])
+  @@index([participantId])
+  @@index([countyId])
+  @@index([constituencyId])
+  @@index([wardId])
+  @@index([createdAt])
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         UserRole @default(ADMIN)
+  isActive     Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

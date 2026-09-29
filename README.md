@@ -1,0 +1,1 @@
+"C:\Program Files\PostgreSQL\13\bin\psql.exe" -U postgres
