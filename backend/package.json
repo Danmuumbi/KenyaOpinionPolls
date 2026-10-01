@@ -36,5 +36,10 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio"
-  }
+  },
+
+
+  "engines": {
+  "node": "22.x"
+}
 }
