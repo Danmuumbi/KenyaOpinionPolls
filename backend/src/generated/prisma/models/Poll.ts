@@ -20,8 +20,18 @@ export type PollModel = runtime.Types.Result.DefaultSelection<Prisma.$PollPayloa
 
 export type AggregatePoll = {
   _count: PollCountAggregateOutputType | null
+  _avg: PollAvgAggregateOutputType | null
+  _sum: PollSumAggregateOutputType | null
   _min: PollMinAggregateOutputType | null
   _max: PollMaxAggregateOutputType | null
+}
+
+export type PollAvgAggregateOutputType = {
+  featuredOrder: number | null
+}
+
+export type PollSumAggregateOutputType = {
+  featuredOrder: number | null
 }
 
 export type PollMinAggregateOutputType = {
@@ -43,6 +53,8 @@ export type PollMinAggregateOutputType = {
   endsAt: Date | null
   allowResults: boolean | null
   isPublic: boolean | null
+  isFeatured: boolean | null
+  featuredOrder: number | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -66,6 +78,8 @@ export type PollMaxAggregateOutputType = {
   endsAt: Date | null
   allowResults: boolean | null
   isPublic: boolean | null
+  isFeatured: boolean | null
+  featuredOrder: number | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -89,11 +103,21 @@ export type PollCountAggregateOutputType = {
   endsAt: number
   allowResults: number
   isPublic: number
+  isFeatured: number
+  featuredOrder: number
   createdAt: number
   updatedAt: number
   _all: number
 }
 
+
+export type PollAvgAggregateInputType = {
+  featuredOrder?: true
+}
+
+export type PollSumAggregateInputType = {
+  featuredOrder?: true
+}
 
 export type PollMinAggregateInputType = {
   id?: true
@@ -114,6 +138,8 @@ export type PollMinAggregateInputType = {
   endsAt?: true
   allowResults?: true
   isPublic?: true
+  isFeatured?: true
+  featuredOrder?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -137,6 +163,8 @@ export type PollMaxAggregateInputType = {
   endsAt?: true
   allowResults?: true
   isPublic?: true
+  isFeatured?: true
+  featuredOrder?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -160,6 +188,8 @@ export type PollCountAggregateInputType = {
   endsAt?: true
   allowResults?: true
   isPublic?: true
+  isFeatured?: true
+  featuredOrder?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -203,6 +233,18 @@ export type PollAggregateArgs<ExtArgs extends runtime.Types.Extensions.InternalA
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
    * 
+   * Select which fields to average
+  **/
+  _avg?: PollAvgAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
+   * Select which fields to sum
+  **/
+  _sum?: PollSumAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
    * Select which fields to find the minimum value
   **/
   _min?: PollMinAggregateInputType
@@ -233,6 +275,8 @@ export type PollGroupByArgs<ExtArgs extends runtime.Types.Extensions.InternalArg
   take?: number
   skip?: number
   _count?: PollCountAggregateInputType | true
+  _avg?: PollAvgAggregateInputType
+  _sum?: PollSumAggregateInputType
   _min?: PollMinAggregateInputType
   _max?: PollMaxAggregateInputType
 }
@@ -256,9 +300,13 @@ export type PollGroupByOutputType = {
   endsAt: Date | null
   allowResults: boolean
   isPublic: boolean
+  isFeatured: boolean
+  featuredOrder: number | null
   createdAt: Date
   updatedAt: Date
   _count: PollCountAggregateOutputType | null
+  _avg: PollAvgAggregateOutputType | null
+  _sum: PollSumAggregateOutputType | null
   _min: PollMinAggregateOutputType | null
   _max: PollMaxAggregateOutputType | null
 }
@@ -300,6 +348,8 @@ export type PollWhereInput = {
   endsAt?: Prisma.DateTimeNullableFilter<"Poll"> | Date | string | null
   allowResults?: Prisma.BoolFilter<"Poll"> | boolean
   isPublic?: Prisma.BoolFilter<"Poll"> | boolean
+  isFeatured?: Prisma.BoolFilter<"Poll"> | boolean
+  featuredOrder?: Prisma.IntNullableFilter<"Poll"> | number | null
   createdAt?: Prisma.DateTimeFilter<"Poll"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Poll"> | Date | string
   position?: Prisma.XOR<Prisma.PositionNullableScalarRelationFilter, Prisma.PositionWhereInput> | null
@@ -330,6 +380,8 @@ export type PollOrderByWithRelationInput = {
   endsAt?: Prisma.SortOrderInput | Prisma.SortOrder
   allowResults?: Prisma.SortOrder
   isPublic?: Prisma.SortOrder
+  isFeatured?: Prisma.SortOrder
+  featuredOrder?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   position?: Prisma.PositionOrderByWithRelationInput
@@ -363,6 +415,8 @@ export type PollWhereUniqueInput = Prisma.AtLeast<{
   endsAt?: Prisma.DateTimeNullableFilter<"Poll"> | Date | string | null
   allowResults?: Prisma.BoolFilter<"Poll"> | boolean
   isPublic?: Prisma.BoolFilter<"Poll"> | boolean
+  isFeatured?: Prisma.BoolFilter<"Poll"> | boolean
+  featuredOrder?: Prisma.IntNullableFilter<"Poll"> | number | null
   createdAt?: Prisma.DateTimeFilter<"Poll"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Poll"> | Date | string
   position?: Prisma.XOR<Prisma.PositionNullableScalarRelationFilter, Prisma.PositionWhereInput> | null
@@ -393,11 +447,15 @@ export type PollOrderByWithAggregationInput = {
   endsAt?: Prisma.SortOrderInput | Prisma.SortOrder
   allowResults?: Prisma.SortOrder
   isPublic?: Prisma.SortOrder
+  isFeatured?: Prisma.SortOrder
+  featuredOrder?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.PollCountOrderByAggregateInput
+  _avg?: Prisma.PollAvgOrderByAggregateInput
   _max?: Prisma.PollMaxOrderByAggregateInput
   _min?: Prisma.PollMinOrderByAggregateInput
+  _sum?: Prisma.PollSumOrderByAggregateInput
 }
 
 export type PollScalarWhereWithAggregatesInput = {
@@ -422,6 +480,8 @@ export type PollScalarWhereWithAggregatesInput = {
   endsAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Poll"> | Date | string | null
   allowResults?: Prisma.BoolWithAggregatesFilter<"Poll"> | boolean
   isPublic?: Prisma.BoolWithAggregatesFilter<"Poll"> | boolean
+  isFeatured?: Prisma.BoolWithAggregatesFilter<"Poll"> | boolean
+  featuredOrder?: Prisma.IntNullableWithAggregatesFilter<"Poll"> | number | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Poll"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Poll"> | Date | string
 }
@@ -440,6 +500,8 @@ export type PollCreateInput = {
   endsAt?: Date | string | null
   allowResults?: boolean
   isPublic?: boolean
+  isFeatured?: boolean
+  featuredOrder?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   position?: Prisma.PositionCreateNestedOneWithoutPollsInput
@@ -470,6 +532,8 @@ export type PollUncheckedCreateInput = {
   endsAt?: Date | string | null
   allowResults?: boolean
   isPublic?: boolean
+  isFeatured?: boolean
+  featuredOrder?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   questions?: Prisma.PollQuestionUncheckedCreateNestedManyWithoutPollInput
@@ -490,6 +554,8 @@ export type PollUpdateInput = {
   endsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   allowResults?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isFeatured?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  featuredOrder?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   position?: Prisma.PositionUpdateOneWithoutPollsNestedInput
@@ -520,6 +586,8 @@ export type PollUncheckedUpdateInput = {
   endsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   allowResults?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isFeatured?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  featuredOrder?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   questions?: Prisma.PollQuestionUncheckedUpdateManyWithoutPollNestedInput
@@ -545,6 +613,8 @@ export type PollCreateManyInput = {
   endsAt?: Date | string | null
   allowResults?: boolean
   isPublic?: boolean
+  isFeatured?: boolean
+  featuredOrder?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -563,6 +633,8 @@ export type PollUpdateManyMutationInput = {
   endsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   allowResults?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isFeatured?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  featuredOrder?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -586,6 +658,8 @@ export type PollUncheckedUpdateManyInput = {
   endsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   allowResults?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isFeatured?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  featuredOrder?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -619,8 +693,14 @@ export type PollCountOrderByAggregateInput = {
   endsAt?: Prisma.SortOrder
   allowResults?: Prisma.SortOrder
   isPublic?: Prisma.SortOrder
+  isFeatured?: Prisma.SortOrder
+  featuredOrder?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+}
+
+export type PollAvgOrderByAggregateInput = {
+  featuredOrder?: Prisma.SortOrder
 }
 
 export type PollMaxOrderByAggregateInput = {
@@ -642,6 +722,8 @@ export type PollMaxOrderByAggregateInput = {
   endsAt?: Prisma.SortOrder
   allowResults?: Prisma.SortOrder
   isPublic?: Prisma.SortOrder
+  isFeatured?: Prisma.SortOrder
+  featuredOrder?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -665,8 +747,14 @@ export type PollMinOrderByAggregateInput = {
   endsAt?: Prisma.SortOrder
   allowResults?: Prisma.SortOrder
   isPublic?: Prisma.SortOrder
+  isFeatured?: Prisma.SortOrder
+  featuredOrder?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+}
+
+export type PollSumOrderByAggregateInput = {
+  featuredOrder?: Prisma.SortOrder
 }
 
 export type PollScalarRelationFilter = {
@@ -896,6 +984,14 @@ export type NullableDateTimeFieldUpdateOperationsInput = {
   set?: Date | string | null
 }
 
+export type NullableIntFieldUpdateOperationsInput = {
+  set?: number | null
+  increment?: number
+  decrement?: number
+  multiply?: number
+  divide?: number
+}
+
 export type PollCreateNestedOneWithoutQuestionsInput = {
   create?: Prisma.XOR<Prisma.PollCreateWithoutQuestionsInput, Prisma.PollUncheckedCreateWithoutQuestionsInput>
   connectOrCreate?: Prisma.PollCreateOrConnectWithoutQuestionsInput
@@ -938,6 +1034,8 @@ export type PollCreateWithoutTargetCountyInput = {
   endsAt?: Date | string | null
   allowResults?: boolean
   isPublic?: boolean
+  isFeatured?: boolean
+  featuredOrder?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   position?: Prisma.PositionCreateNestedOneWithoutPollsInput
@@ -966,6 +1064,8 @@ export type PollUncheckedCreateWithoutTargetCountyInput = {
   endsAt?: Date | string | null
   allowResults?: boolean
   isPublic?: boolean
+  isFeatured?: boolean
+  featuredOrder?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   questions?: Prisma.PollQuestionUncheckedCreateNestedManyWithoutPollInput
@@ -1020,6 +1120,8 @@ export type PollScalarWhereInput = {
   endsAt?: Prisma.DateTimeNullableFilter<"Poll"> | Date | string | null
   allowResults?: Prisma.BoolFilter<"Poll"> | boolean
   isPublic?: Prisma.BoolFilter<"Poll"> | boolean
+  isFeatured?: Prisma.BoolFilter<"Poll"> | boolean
+  featuredOrder?: Prisma.IntNullableFilter<"Poll"> | number | null
   createdAt?: Prisma.DateTimeFilter<"Poll"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Poll"> | Date | string
 }
@@ -1038,6 +1140,8 @@ export type PollCreateWithoutTargetConstituencyInput = {
   endsAt?: Date | string | null
   allowResults?: boolean
   isPublic?: boolean
+  isFeatured?: boolean
+  featuredOrder?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   position?: Prisma.PositionCreateNestedOneWithoutPollsInput
@@ -1066,6 +1170,8 @@ export type PollUncheckedCreateWithoutTargetConstituencyInput = {
   endsAt?: Date | string | null
   allowResults?: boolean
   isPublic?: boolean
+  isFeatured?: boolean
+  featuredOrder?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   questions?: Prisma.PollQuestionUncheckedCreateNestedManyWithoutPollInput
@@ -1112,6 +1218,8 @@ export type PollCreateWithoutTargetWardInput = {
   endsAt?: Date | string | null
   allowResults?: boolean
   isPublic?: boolean
+  isFeatured?: boolean
+  featuredOrder?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   position?: Prisma.PositionCreateNestedOneWithoutPollsInput
@@ -1140,6 +1248,8 @@ export type PollUncheckedCreateWithoutTargetWardInput = {
   endsAt?: Date | string | null
   allowResults?: boolean
   isPublic?: boolean
+  isFeatured?: boolean
+  featuredOrder?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   questions?: Prisma.PollQuestionUncheckedCreateNestedManyWithoutPollInput
@@ -1186,6 +1296,8 @@ export type PollCreateWithoutPositionInput = {
   endsAt?: Date | string | null
   allowResults?: boolean
   isPublic?: boolean
+  isFeatured?: boolean
+  featuredOrder?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   campaign?: Prisma.CampaignCreateNestedOneWithoutPollsInput
@@ -1214,6 +1326,8 @@ export type PollUncheckedCreateWithoutPositionInput = {
   endsAt?: Date | string | null
   allowResults?: boolean
   isPublic?: boolean
+  isFeatured?: boolean
+  featuredOrder?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   questions?: Prisma.PollQuestionUncheckedCreateNestedManyWithoutPollInput
@@ -1260,6 +1374,8 @@ export type PollCreateWithoutCampaignInput = {
   endsAt?: Date | string | null
   allowResults?: boolean
   isPublic?: boolean
+  isFeatured?: boolean
+  featuredOrder?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   position?: Prisma.PositionCreateNestedOneWithoutPollsInput
@@ -1288,6 +1404,8 @@ export type PollUncheckedCreateWithoutCampaignInput = {
   endsAt?: Date | string | null
   allowResults?: boolean
   isPublic?: boolean
+  isFeatured?: boolean
+  featuredOrder?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   questions?: Prisma.PollQuestionUncheckedCreateNestedManyWithoutPollInput
@@ -1334,6 +1452,8 @@ export type PollCreateWithoutQuestionsInput = {
   endsAt?: Date | string | null
   allowResults?: boolean
   isPublic?: boolean
+  isFeatured?: boolean
+  featuredOrder?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   position?: Prisma.PositionCreateNestedOneWithoutPollsInput
@@ -1363,6 +1483,8 @@ export type PollUncheckedCreateWithoutQuestionsInput = {
   endsAt?: Date | string | null
   allowResults?: boolean
   isPublic?: boolean
+  isFeatured?: boolean
+  featuredOrder?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   responses?: Prisma.ResponseUncheckedCreateNestedManyWithoutPollInput
@@ -1398,6 +1520,8 @@ export type PollUpdateWithoutQuestionsInput = {
   endsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   allowResults?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isFeatured?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  featuredOrder?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   position?: Prisma.PositionUpdateOneWithoutPollsNestedInput
@@ -1427,6 +1551,8 @@ export type PollUncheckedUpdateWithoutQuestionsInput = {
   endsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   allowResults?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isFeatured?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  featuredOrder?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   responses?: Prisma.ResponseUncheckedUpdateManyWithoutPollNestedInput
@@ -1446,6 +1572,8 @@ export type PollCreateWithoutResponsesInput = {
   endsAt?: Date | string | null
   allowResults?: boolean
   isPublic?: boolean
+  isFeatured?: boolean
+  featuredOrder?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   position?: Prisma.PositionCreateNestedOneWithoutPollsInput
@@ -1475,6 +1603,8 @@ export type PollUncheckedCreateWithoutResponsesInput = {
   endsAt?: Date | string | null
   allowResults?: boolean
   isPublic?: boolean
+  isFeatured?: boolean
+  featuredOrder?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   questions?: Prisma.PollQuestionUncheckedCreateNestedManyWithoutPollInput
@@ -1510,6 +1640,8 @@ export type PollUpdateWithoutResponsesInput = {
   endsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   allowResults?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isFeatured?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  featuredOrder?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   position?: Prisma.PositionUpdateOneWithoutPollsNestedInput
@@ -1539,6 +1671,8 @@ export type PollUncheckedUpdateWithoutResponsesInput = {
   endsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   allowResults?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isFeatured?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  featuredOrder?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   questions?: Prisma.PollQuestionUncheckedUpdateManyWithoutPollNestedInput
@@ -1562,6 +1696,8 @@ export type PollCreateManyTargetCountyInput = {
   endsAt?: Date | string | null
   allowResults?: boolean
   isPublic?: boolean
+  isFeatured?: boolean
+  featuredOrder?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -1580,6 +1716,8 @@ export type PollUpdateWithoutTargetCountyInput = {
   endsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   allowResults?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isFeatured?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  featuredOrder?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   position?: Prisma.PositionUpdateOneWithoutPollsNestedInput
@@ -1608,6 +1746,8 @@ export type PollUncheckedUpdateWithoutTargetCountyInput = {
   endsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   allowResults?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isFeatured?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  featuredOrder?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   questions?: Prisma.PollQuestionUncheckedUpdateManyWithoutPollNestedInput
@@ -1632,6 +1772,8 @@ export type PollUncheckedUpdateManyWithoutTargetCountyInput = {
   endsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   allowResults?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isFeatured?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  featuredOrder?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1654,6 +1796,8 @@ export type PollCreateManyTargetConstituencyInput = {
   endsAt?: Date | string | null
   allowResults?: boolean
   isPublic?: boolean
+  isFeatured?: boolean
+  featuredOrder?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -1672,6 +1816,8 @@ export type PollUpdateWithoutTargetConstituencyInput = {
   endsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   allowResults?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isFeatured?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  featuredOrder?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   position?: Prisma.PositionUpdateOneWithoutPollsNestedInput
@@ -1700,6 +1846,8 @@ export type PollUncheckedUpdateWithoutTargetConstituencyInput = {
   endsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   allowResults?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isFeatured?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  featuredOrder?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   questions?: Prisma.PollQuestionUncheckedUpdateManyWithoutPollNestedInput
@@ -1724,6 +1872,8 @@ export type PollUncheckedUpdateManyWithoutTargetConstituencyInput = {
   endsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   allowResults?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isFeatured?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  featuredOrder?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1746,6 +1896,8 @@ export type PollCreateManyTargetWardInput = {
   endsAt?: Date | string | null
   allowResults?: boolean
   isPublic?: boolean
+  isFeatured?: boolean
+  featuredOrder?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -1764,6 +1916,8 @@ export type PollUpdateWithoutTargetWardInput = {
   endsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   allowResults?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isFeatured?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  featuredOrder?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   position?: Prisma.PositionUpdateOneWithoutPollsNestedInput
@@ -1792,6 +1946,8 @@ export type PollUncheckedUpdateWithoutTargetWardInput = {
   endsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   allowResults?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isFeatured?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  featuredOrder?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   questions?: Prisma.PollQuestionUncheckedUpdateManyWithoutPollNestedInput
@@ -1816,6 +1972,8 @@ export type PollUncheckedUpdateManyWithoutTargetWardInput = {
   endsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   allowResults?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isFeatured?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  featuredOrder?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1838,6 +1996,8 @@ export type PollCreateManyPositionInput = {
   endsAt?: Date | string | null
   allowResults?: boolean
   isPublic?: boolean
+  isFeatured?: boolean
+  featuredOrder?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -1856,6 +2016,8 @@ export type PollUpdateWithoutPositionInput = {
   endsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   allowResults?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isFeatured?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  featuredOrder?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   campaign?: Prisma.CampaignUpdateOneWithoutPollsNestedInput
@@ -1884,6 +2046,8 @@ export type PollUncheckedUpdateWithoutPositionInput = {
   endsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   allowResults?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isFeatured?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  featuredOrder?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   questions?: Prisma.PollQuestionUncheckedUpdateManyWithoutPollNestedInput
@@ -1908,6 +2072,8 @@ export type PollUncheckedUpdateManyWithoutPositionInput = {
   endsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   allowResults?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isFeatured?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  featuredOrder?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1930,6 +2096,8 @@ export type PollCreateManyCampaignInput = {
   endsAt?: Date | string | null
   allowResults?: boolean
   isPublic?: boolean
+  isFeatured?: boolean
+  featuredOrder?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -1948,6 +2116,8 @@ export type PollUpdateWithoutCampaignInput = {
   endsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   allowResults?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isFeatured?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  featuredOrder?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   position?: Prisma.PositionUpdateOneWithoutPollsNestedInput
@@ -1976,6 +2146,8 @@ export type PollUncheckedUpdateWithoutCampaignInput = {
   endsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   allowResults?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isFeatured?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  featuredOrder?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   questions?: Prisma.PollQuestionUncheckedUpdateManyWithoutPollNestedInput
@@ -2000,6 +2172,8 @@ export type PollUncheckedUpdateManyWithoutCampaignInput = {
   endsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   allowResults?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isFeatured?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  featuredOrder?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -2063,6 +2237,8 @@ export type PollSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   endsAt?: boolean
   allowResults?: boolean
   isPublic?: boolean
+  isFeatured?: boolean
+  featuredOrder?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   position?: boolean | Prisma.Poll$positionArgs<ExtArgs>
@@ -2094,6 +2270,8 @@ export type PollSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   endsAt?: boolean
   allowResults?: boolean
   isPublic?: boolean
+  isFeatured?: boolean
+  featuredOrder?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   position?: boolean | Prisma.Poll$positionArgs<ExtArgs>
@@ -2122,6 +2300,8 @@ export type PollSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   endsAt?: boolean
   allowResults?: boolean
   isPublic?: boolean
+  isFeatured?: boolean
+  featuredOrder?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   position?: boolean | Prisma.Poll$positionArgs<ExtArgs>
@@ -2150,11 +2330,13 @@ export type PollSelectScalar = {
   endsAt?: boolean
   allowResults?: boolean
   isPublic?: boolean
+  isFeatured?: boolean
+  featuredOrder?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type PollOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "title" | "description" | "type" | "status" | "positionId" | "campaignId" | "sponsorName" | "sponsorOrganization" | "disclosureNote" | "methodologyNote" | "targetCountyId" | "targetConstituencyId" | "targetWardId" | "startsAt" | "endsAt" | "allowResults" | "isPublic" | "createdAt" | "updatedAt", ExtArgs["result"]["poll"]>
+export type PollOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "title" | "description" | "type" | "status" | "positionId" | "campaignId" | "sponsorName" | "sponsorOrganization" | "disclosureNote" | "methodologyNote" | "targetCountyId" | "targetConstituencyId" | "targetWardId" | "startsAt" | "endsAt" | "allowResults" | "isPublic" | "isFeatured" | "featuredOrder" | "createdAt" | "updatedAt", ExtArgs["result"]["poll"]>
 export type PollInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   position?: boolean | Prisma.Poll$positionArgs<ExtArgs>
   campaign?: boolean | Prisma.Poll$campaignArgs<ExtArgs>
@@ -2210,6 +2392,8 @@ export type $PollPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     endsAt: Date | null
     allowResults: boolean
     isPublic: boolean
+    isFeatured: boolean
+    featuredOrder: number | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["poll"]>
@@ -2660,6 +2844,8 @@ export interface PollFieldRefs {
   readonly endsAt: Prisma.FieldRef<"Poll", 'DateTime'>
   readonly allowResults: Prisma.FieldRef<"Poll", 'Boolean'>
   readonly isPublic: Prisma.FieldRef<"Poll", 'Boolean'>
+  readonly isFeatured: Prisma.FieldRef<"Poll", 'Boolean'>
+  readonly featuredOrder: Prisma.FieldRef<"Poll", 'Int'>
   readonly createdAt: Prisma.FieldRef<"Poll", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Poll", 'DateTime'>
 }

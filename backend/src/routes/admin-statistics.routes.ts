@@ -623,6 +623,13 @@ interface CandidateResult {
   question: string;
   responses: number;
   percentage: number;
+
+  pollId: string;
+  questionId: string;
+
+  targetCounty: string;
+  targetConstituency: string;
+  targetWard: string;
 }
 
 interface QuestionResult {
@@ -1843,104 +1850,67 @@ router.get(
   }
 );
 
-
 // --------------------------------------------------------------------------
 // PDF EXPORT
 // --------------------------------------------------------------------------
 
 router.get(
   "/export/pdf",
-  async (
-    req,
-    res
-  ) => {
-
+  async (req, res) => {
     try {
+      // --------------------------------------------------------------------
+      // FILTERS
+      // --------------------------------------------------------------------
 
-      const filters =
-        parseFilters(
-          req.query as Record<
-            string,
-            unknown
-          >
-        );
+      const filters = parseFilters(
+        req.query as Record<string, unknown>
+      );
 
+      const where = await buildExportWhere(filters);
 
-      const where =
-        await buildExportWhere(
-          filters
-        );
+      // --------------------------------------------------------------------
+      // RESPONSES
+      // --------------------------------------------------------------------
 
+      const responses = await prisma.response.findMany({
+        where,
 
-      const responses =
-        await prisma.response.findMany({
-
-          where,
-
-          include: {
-
-            poll: {
-
-              include: {
-
-                position: true,
-
-                campaign: true,
-
-                targetCounty: true,
-
-                targetConstituency: true,
-
-                targetWard: true,
-
-              },
-
+        include: {
+          poll: {
+            include: {
+              position: true,
+              campaign: true,
+              targetCounty: true,
+              targetConstituency: true,
+              targetWard: true,
             },
+          },
 
+          question: true,
 
-            question: true,
-
-
-            option: {
-
-              include: {
-
-                candidate: {
-
-                  include: {
-
-                    position: true,
-
-                  },
-
+          option: {
+            include: {
+              candidate: {
+                include: {
+                  position: true,
                 },
-
               },
-
             },
-
-
-            county: true,
-
-            constituency: true,
-
-            ward: true,
-
           },
 
+          county: true,
+          constituency: true,
+          ward: true,
+        },
 
-          orderBy: {
+        orderBy: {
+          createdAt: "asc",
+        },
+      });
 
-            createdAt: "asc",
-
-          },
-
-        });
-
-
-      // ---------------------------------------------------------------------
+      // --------------------------------------------------------------------
       // ANALYTICS
-      // ---------------------------------------------------------------------
+      // --------------------------------------------------------------------
 
       const candidateResults =
         await buildCandidateResults(
@@ -1948,12 +1918,10 @@ router.get(
           where
         );
 
-
       const questionResults =
         buildQuestionResults(
           responses
         );
-
 
       const countyResults =
         buildGeographyResults(
@@ -1961,13 +1929,11 @@ router.get(
           "county"
         );
 
-
       const constituencyResults =
         buildGeographyResults(
           responses,
           "constituency"
         );
-
 
       const wardResults =
         buildGeographyResults(
@@ -1975,10 +1941,9 @@ router.get(
           "ward"
         );
 
-
-      // ---------------------------------------------------------------------
+      // --------------------------------------------------------------------
       // OVERVIEW
-      // ---------------------------------------------------------------------
+      // --------------------------------------------------------------------
 
       const uniqueParticipants =
         new Set(
@@ -1988,7 +1953,6 @@ router.get(
           )
         ).size;
 
-
       const uniquePolls =
         new Set(
           responses.map(
@@ -1996,7 +1960,6 @@ router.get(
               response.pollId
           )
         ).size;
-
 
       const uniqueQuestions =
         new Set(
@@ -2006,7 +1969,6 @@ router.get(
           )
         ).size;
 
-
       const uniqueCounties =
         new Set(
           responses
@@ -2014,11 +1976,8 @@ router.get(
               response =>
                 response.countyId
             )
-            .filter(
-              Boolean
-            )
+            .filter(Boolean)
         ).size;
-
 
       const uniqueConstituencies =
         new Set(
@@ -2027,11 +1986,8 @@ router.get(
               response =>
                 response.constituencyId
             )
-            .filter(
-              Boolean
-            )
+            .filter(Boolean)
         ).size;
-
 
       const uniqueWards =
         new Set(
@@ -2040,946 +1996,2589 @@ router.get(
               response =>
                 response.wardId
             )
-            .filter(
-              Boolean
-            )
+            .filter(Boolean)
         ).size;
 
+      // --------------------------------------------------------------------
+      // DATE RANGE
+      // --------------------------------------------------------------------
 
-      // ---------------------------------------------------------------------
-      // PDFKIT
-      // ---------------------------------------------------------------------
+      const oldestResponse =
+        responses.length > 0
+          ? responses[0].createdAt
+          : null;
 
-      const PDFDocument =
-        require(
-          "pdfkit"
+      const latestResponse =
+        responses.length > 0
+          ? responses[
+              responses.length - 1
+            ].createdAt
+          : null;
+
+      // --------------------------------------------------------------------
+      // POLL SUMMARY
+      // --------------------------------------------------------------------
+
+      interface PollSummary {
+        id: string;
+        title: string;
+        type: string;
+        status: string;
+        position: string;
+        campaign: string;
+        county: string;
+        constituency: string;
+        ward: string;
+        responses: number;
+        participants: number;
+      }
+
+      const pollMap =
+        new Map<string, PollSummary>();
+
+      for (
+        const response of responses
+      ) {
+        const poll =
+          response.poll;
+
+        const existing =
+          pollMap.get(
+            poll.id
+          );
+
+        if (existing) {
+          existing.responses += 1;
+        } else {
+          pollMap.set(
+            poll.id,
+            {
+              id:
+                poll.id,
+
+              title:
+                poll.title,
+
+              type:
+                poll.type,
+
+              status:
+                poll.status,
+
+              position:
+                poll.position?.name
+                  ?? "General",
+
+              campaign:
+                poll.campaign?.name
+                  ?? "",
+
+              county:
+                poll.targetCounty?.name
+                  ?? "",
+
+              constituency:
+                poll.targetConstituency?.name
+                  ?? "",
+
+              ward:
+                poll.targetWard?.name
+                  ?? "",
+
+              responses:
+                1,
+
+              participants:
+                0,
+            }
+          );
+        }
+      }
+
+      for (
+        const poll of pollMap.values()
+      ) {
+        const participantIds =
+          new Set(
+            responses
+              .filter(
+                response =>
+                  response.pollId ===
+                  poll.id
+              )
+              .map(
+                response =>
+                  response.participantId
+              )
+          );
+
+        poll.participants =
+          participantIds.size;
+      }
+
+      const pollSummaries =
+        Array.from(
+          pollMap.values()
         );
 
+      // --------------------------------------------------------------------
+      // PDFKIT
+      // --------------------------------------------------------------------
+
+      const PDFDocument =
+        require("pdfkit");
 
       const doc =
         new PDFDocument({
-
           size: "A4",
-
-          margin: 45,
-
+          margin: 48,
           bufferPages: true,
+          autoFirstPage: true,
 
+          info: {
+            Title:
+              "SFD Insights — Opinion Poll Statistics Report",
+
+            Author:
+              "SFD Insights",
+
+            Subject:
+              "Recorded public opinion polling statistics",
+
+            Keywords:
+              "SFD Insights, Kenya, opinion polls, statistics",
+          },
         });
 
+      const today =
+        new Date();
+
+      const dateStamp =
+        today
+          .toISOString()
+          .slice(0, 10);
 
       const filename =
-        `kenya-opinion-polls-${new Date()
-          .toISOString()
-          .slice(
-            0,
-            10
-          )}.pdf`;
-
+        `sfd-insights-statistics-report-${dateStamp}.pdf`;
 
       res.setHeader(
         "Content-Type",
         "application/pdf"
       );
 
-
       res.setHeader(
         "Content-Disposition",
         `attachment; filename="${filename}"`
       );
 
-
       doc.pipe(res);
 
+      // --------------------------------------------------------------------
+      // DESIGN SYSTEM
+      // --------------------------------------------------------------------
 
-      // ---------------------------------------------------------------------
-      // HELPER FUNCTIONS
-      // ---------------------------------------------------------------------
+      const COLORS = {
+        blue: "#2563eb",
+        darkBlue: "#1d4ed8",
+        orange: "#f59e0b",
+        ink: "#172033",
+        muted: "#64748b",
+        light: "#f7f9fc",
+        border: "#dfe5ed",
+        white: "#ffffff",
+        green: "#15803d",
+      };
 
-      const ensureSpace =
-        (
-          requiredHeight = 70
-        ) => {
+      const PAGE_WIDTH =
+        595.28;
 
-          if (
-            doc.y >
-            760 -
-            requiredHeight
-          ) {
+      const PAGE_HEIGHT =
+        841.89;
 
-            doc.addPage();
+      const LEFT =
+        48;
 
-          }
+      const RIGHT =
+        PAGE_WIDTH - 48;
 
-        };
+      const CONTENT_WIDTH =
+        RIGHT - LEFT;
 
+      const TOP =
+        72;
 
-      const section =
-        (
-          title: string
-        ) => {
+      /*
+       * Keep all content safely above the footer.
+       *
+       * IMPORTANT:
+       * Footer content is positioned absolutely and never participates
+       * in PDFKit's normal text flow.
+       */
 
-          ensureSpace(
-            60
+      const FOOTER_LINE_Y =
+        776;
+
+      const FOOTER_TEXT_Y =
+        785;
+
+      const BOTTOM =
+        758;
+
+      // --------------------------------------------------------------------
+      // BASIC HELPERS
+      // --------------------------------------------------------------------
+
+      const formatNumber =
+        (value: number) =>
+          value.toLocaleString(
+            "en-US"
           );
 
+      const formatDate =
+        (value: Date | null) => {
+          if (!value) {
+            return "Not available";
+          }
+
+          return value.toLocaleDateString(
+            "en-KE",
+            {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            }
+          );
+        };
+
+      const formatDateTime =
+        (value: Date | null) => {
+          if (!value) {
+            return "Not available";
+          }
+
+          return value.toLocaleString(
+            "en-KE",
+            {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            }
+          );
+        };
+
+      const cleanText =
+        (
+          value: unknown,
+          fallback = "—"
+        ) => {
+          if (
+            value === null ||
+            value === undefined ||
+            String(value).trim() === ""
+          ) {
+            return fallback;
+          }
+
+          return String(value);
+        };
+
+      const truncate =
+        (
+          value: unknown,
+          max = 65
+        ) => {
+          const text =
+            cleanText(
+              value,
+              ""
+            );
+
+          if (
+            text.length <= max
+          ) {
+            return text;
+          }
+
+          return (
+            text.slice(
+              0,
+              max - 1
+            ) + "…"
+          );
+        };
+
+      // --------------------------------------------------------------------
+      // CONTEST SCOPE
+      // --------------------------------------------------------------------
+
+      /*
+       * IMPORTANT:
+       *
+       * Contest geography comes directly from CandidateResult.
+       *
+       * We DO NOT search the responses array using:
+       *
+       *     poll.title
+       *     question.text
+       *
+       * because titles/questions are not unique identifiers.
+       *
+       * This guarantees that:
+       *
+       * Muvau Kikuumini MCA
+       *     remains Muvau Kikuumini.
+       *
+       * Makueni Governor
+       *     remains Makueni County.
+       *
+       * Nairobi Governor
+       *     remains Nairobi County.
+       */
+
+      const getCandidateScope =
+        (
+          result: CandidateResult
+        ) => {
+          const parts: string[] = [];
+
+          if (
+            result.targetWard
+          ) {
+            parts.push(
+              `Ward: ${result.targetWard}`
+            );
+          }
+
+          if (
+            result.targetConstituency
+          ) {
+            parts.push(
+              `Constituency: ${result.targetConstituency}`
+            );
+          }
+
+          if (
+            result.targetCounty
+          ) {
+            parts.push(
+              `County: ${result.targetCounty}`
+            );
+          }
+
+          if (
+            parts.length === 0
+          ) {
+            return "National / no geographic target";
+          }
+
+          return parts.join(
+            "  •  "
+          );
+        };
+
+      const getCandidateScopeLevel =
+        (
+          result: CandidateResult
+        ) => {
+          if (
+            result.targetWard
+          ) {
+            return "WARD CONTEST";
+          }
+
+          if (
+            result.targetConstituency
+          ) {
+            return "CONSTITUENCY CONTEST";
+          }
+
+          if (
+            result.targetCounty
+          ) {
+            return "COUNTY CONTEST";
+          }
+
+          if (
+            result.position
+          ) {
+            return "POSITION CONTEST";
+          }
+
+          return "PUBLIC OPINION";
+        };
+
+      // --------------------------------------------------------------------
+      // PAGE HEADER
+      // --------------------------------------------------------------------
+
+      const drawPageHeader =
+        (
+          title =
+            "Administrative Statistics Report"
+        ) => {
+          doc.save();
 
           doc
-            .moveDown(
-              1
+            .rect(
+              LEFT,
+              26,
+              8,
+              8
             )
-            .fontSize(14)
+            .fillColor(
+              COLORS.orange
+            )
+            .fill();
+
+          doc
             .font(
               "Helvetica-Bold"
             )
+            .fontSize(
+              10
+            )
             .fillColor(
-              "black"
+              COLORS.ink
             )
             .text(
-              title
+              "SFD INSIGHTS",
+              LEFT + 15,
+              23,
+              {
+                lineBreak: false,
+              }
             );
 
+          doc
+            .font(
+              "Helvetica"
+            )
+            .fontSize(
+              7
+            )
+            .fillColor(
+              COLORS.muted
+            )
+            .text(
+              "PUBLIC OPINION  •  DATA  •  INSIGHT",
+              LEFT + 15,
+              36,
+              {
+                lineBreak: false,
+              }
+            );
 
-          doc.moveDown(
-            0.5
-          );
+          doc
+            .font(
+              "Helvetica-Bold"
+            )
+            .fontSize(
+              8
+            )
+            .fillColor(
+              COLORS.muted
+            )
+            .text(
+              title.toUpperCase(),
+              LEFT,
+              47,
+              {
+                align: "right",
+                width:
+                  CONTENT_WIDTH,
+                lineBreak: false,
+              }
+            );
 
+          doc
+            .moveTo(
+              LEFT,
+              54
+            )
+            .lineTo(
+              RIGHT,
+              54
+            )
+            .lineWidth(
+              0.7
+            )
+            .strokeColor(
+              COLORS.border
+            )
+            .stroke();
+
+          doc.restore();
         };
 
+      // --------------------------------------------------------------------
+      // PAGE FOOTER
+      // --------------------------------------------------------------------
 
-      const drawTableHeader =
+      const drawPageFooter =
         (
-          columns: string[]
+          pageNumber: number,
+          totalPages: number
         ) => {
+          doc.save();
 
+          doc
+            .moveTo(
+              LEFT,
+              FOOTER_LINE_Y
+            )
+            .lineTo(
+              RIGHT,
+              FOOTER_LINE_Y
+            )
+            .lineWidth(
+              0.5
+            )
+            .strokeColor(
+              COLORS.border
+            )
+            .stroke();
+
+          doc
+            .font(
+              "Helvetica"
+            )
+            .fontSize(
+              7
+            )
+            .fillColor(
+              COLORS.muted
+            )
+            .text(
+              "SFD INSIGHTS  •  Kenya Opinion Polls",
+              LEFT,
+              FOOTER_TEXT_Y,
+              {
+                width: 190,
+                height: 10,
+                lineBreak: false,
+              }
+            );
+
+          doc
+            .text(
+              "Recorded platform responses — not official election results",
+              LEFT + 190,
+              FOOTER_TEXT_Y,
+              {
+                width: 230,
+                height: 10,
+                align: "center",
+                lineBreak: false,
+              }
+            );
+
+          doc
+            .text(
+              `Page ${pageNumber} of ${totalPages}`,
+              RIGHT - 75,
+              FOOTER_TEXT_Y,
+              {
+                width: 75,
+                height: 10,
+                align: "right",
+                lineBreak: false,
+              }
+            );
+
+          doc.restore();
+        };
+
+      // --------------------------------------------------------------------
+      // PAGE MANAGEMENT
+      // --------------------------------------------------------------------
+
+      const newPage =
+        (
+          headerTitle =
+            "Administrative Statistics Report"
+        ) => {
+          doc.addPage();
+
+          drawPageHeader(
+            headerTitle
+          );
+
+          doc.y =
+            TOP + 20;
+        };
+
+      const ensureSpace =
+        (
+          height = 80,
+          headerTitle =
+            "Administrative Statistics Report"
+        ) => {
+          if (
+            doc.y + height >
+            BOTTOM
+          ) {
+            newPage(
+              headerTitle
+            );
+          }
+        };
+
+      // --------------------------------------------------------------------
+      // SECTION TITLE
+      // --------------------------------------------------------------------
+
+      const drawSectionTitle =
+        (
+          title: string,
+          eyebrow?: string
+        ) => {
+          ensureSpace(
+            70
+          );
+
+          if (eyebrow) {
+            doc
+              .font(
+                "Helvetica-Bold"
+              )
+              .fontSize(
+                7
+              )
+              .fillColor(
+                COLORS.blue
+              )
+              .text(
+                eyebrow.toUpperCase(),
+                LEFT,
+                doc.y,
+                {
+                  lineBreak: false,
+                }
+              );
+
+            doc.moveDown(
+              0.3
+            );
+          }
+
+          doc
+            .font(
+              "Helvetica-Bold"
+            )
+            .fontSize(
+              17
+            )
+            .fillColor(
+              COLORS.ink
+            )
+            .text(
+              title,
+              {
+                lineGap: 1,
+              }
+            );
+
+          doc.moveDown(
+            0.25
+          );
+
+          doc
+            .moveTo(
+              LEFT,
+              doc.y
+            )
+            .lineTo(
+              LEFT + 45,
+              doc.y
+            )
+            .lineWidth(
+              2
+            )
+            .strokeColor(
+              COLORS.orange
+            )
+            .stroke();
+
+          doc.moveDown(
+            0.7
+          );
+        };
+
+      // --------------------------------------------------------------------
+      // PARAGRAPH
+      // --------------------------------------------------------------------
+
+      const drawParagraph =
+        (
+          text: string,
+          size = 9,
+          color = COLORS.muted
+        ) => {
           ensureSpace(
             45
           );
 
-
           doc
-            .fontSize(8)
             .font(
-              "Helvetica-Bold"
+              "Helvetica"
+            )
+            .fontSize(
+              size
+            )
+            .fillColor(
+              color
+            )
+            .text(
+              text,
+              {
+                width:
+                  CONTENT_WIDTH,
+                lineGap: 2,
+              }
             );
 
-
-          doc.text(
-            columns.join(
-              "    "
-            )
-          );
-
-
           doc.moveDown(
-            0.25
+            0.5
           );
-
         };
 
+      // --------------------------------------------------------------------
+      // METRIC
+      // --------------------------------------------------------------------
+
+      const drawMetric =
+        (
+          x: number,
+          y: number,
+          width: number,
+          label: string,
+          value: string
+        ) => {
+          doc
+            .rect(
+              x,
+              y,
+              width,
+              68
+            )
+            .fillColor(
+              COLORS.light
+            )
+            .fill();
+
+          doc
+            .rect(
+              x,
+              y,
+              3,
+              68
+            )
+            .fillColor(
+              COLORS.blue
+            )
+            .fill();
+
+          doc
+            .font(
+              "Helvetica-Bold"
+            )
+            .fontSize(
+              19
+            )
+            .fillColor(
+              COLORS.ink
+            )
+            .text(
+              value,
+              x + 13,
+              y + 12,
+              {
+                width:
+                  width - 20,
+                lineBreak: false,
+              }
+            );
+
+          doc
+            .font(
+              "Helvetica"
+            )
+            .fontSize(
+              7.5
+            )
+            .fillColor(
+              COLORS.muted
+            )
+            .text(
+              label.toUpperCase(),
+              x + 13,
+              y + 43,
+              {
+                width:
+                  width - 20,
+                lineBreak: false,
+              }
+            );
+        };
+
+      // --------------------------------------------------------------------
+      // TABLE
+      // --------------------------------------------------------------------
+
+      const drawTableHeader =
+        (
+          columns: {
+            title: string;
+            x: number;
+            width: number;
+          }[],
+          y = doc.y
+        ) => {
+          doc
+            .rect(
+              LEFT,
+              y - 4,
+              CONTENT_WIDTH,
+              21
+            )
+            .fillColor(
+              COLORS.ink
+            )
+            .fill();
+
+          doc
+            .font(
+              "Helvetica-Bold"
+            )
+            .fontSize(
+              7
+            )
+            .fillColor(
+              COLORS.white
+            );
+
+          for (
+            const column of columns
+          ) {
+            doc.text(
+              column.title.toUpperCase(),
+              column.x,
+              y + 2,
+              {
+                width:
+                  column.width,
+                lineBreak: false,
+              }
+            );
+          }
+
+          doc.y =
+            y + 25;
+        };
 
       const drawTableRow =
         (
-          values: unknown[]
+          values: string[],
+          columns: {
+            title: string;
+            x: number;
+            width: number;
+          }[],
+          alternate = false,
+          headerTitle =
+            "Administrative Statistics Report"
         ) => {
+          const rowY =
+            doc.y;
 
-          ensureSpace(
-            35
-          );
-
-
-          doc
-            .fontSize(8)
-            .font(
-              "Helvetica"
+          const heights =
+            values.map(
+              (
+                value,
+                index
+              ) =>
+                doc.heightOfString(
+                  value,
+                  {
+                    width:
+                      columns[index]
+                        .width - 8,
+                    font:
+                      "Helvetica",
+                    fontSize:
+                      7.5,
+                  }
+                )
             );
 
+          const rowHeight =
+            Math.max(
+              24,
+              ...heights.map(
+                height =>
+                  height + 10
+              )
+            );
 
-          doc.text(
-            values
-              .map(
-                value =>
-                  String(
-                    value ??
-                    ""
-                  )
-              )
-              .join(
-                "    "
-              )
+          ensureSpace(
+            rowHeight + 5,
+            headerTitle
           );
 
+          const actualY =
+            doc.y;
 
-          doc.moveDown(
-            0.25
+          if (
+            alternate
+          ) {
+            doc
+              .rect(
+                LEFT,
+                actualY - 5,
+                CONTENT_WIDTH,
+                rowHeight
+              )
+              .fillColor(
+                COLORS.light
+              )
+              .fill();
+          }
+
+          doc
+            .font(
+              "Helvetica"
+            )
+            .fontSize(
+              7.5
+            )
+            .fillColor(
+              COLORS.ink
+            );
+
+          values.forEach(
+            (
+              value,
+              index
+            ) => {
+              doc.text(
+                value,
+                columns[index].x,
+                actualY,
+                {
+                  width:
+                    columns[index]
+                      .width - 8,
+                  lineGap: 1,
+                }
+              );
+            }
           );
 
+          doc
+            .moveTo(
+              LEFT,
+              actualY +
+                rowHeight -
+                5
+            )
+            .lineTo(
+              RIGHT,
+              actualY +
+                rowHeight -
+                5
+            )
+            .lineWidth(
+              0.35
+            )
+            .strokeColor(
+              COLORS.border
+            )
+            .stroke();
+
+          doc.y =
+            actualY +
+            rowHeight;
         };
 
+      // --------------------------------------------------------------------
+      // COVER PAGE
+      // --------------------------------------------------------------------
 
-      // ---------------------------------------------------------------------
-      // TITLE
-      // ---------------------------------------------------------------------
+      doc.y =
+        105;
 
       doc
-        .fontSize(20)
+        .rect(
+          LEFT,
+          95,
+          8,
+          110
+        )
+        .fillColor(
+          COLORS.orange
+        )
+        .fill();
+
+      doc
         .font(
           "Helvetica-Bold"
         )
+        .fontSize(
+          12
+        )
+        .fillColor(
+          COLORS.blue
+        )
         .text(
-          "Kenya Opinion Polls",
-          {
-            align: "center",
-          }
+          "SFD INSIGHTS",
+          LEFT + 25,
+          100
         );
 
-
       doc
-        .moveDown(0.4)
-        .fontSize(14)
         .font(
           "Helvetica"
         )
+        .fontSize(
+          8
+        )
+        .fillColor(
+          COLORS.muted
+        )
         .text(
-          "Administrative Statistics Report",
+          "PUBLIC OPINION  •  DATA  •  INSIGHT",
+          LEFT + 25,
+          118
+        );
+
+      doc
+        .font(
+          "Helvetica-Bold"
+        )
+        .fontSize(
+          29
+        )
+        .fillColor(
+          COLORS.ink
+        )
+        .text(
+          "Opinion Poll\nStatistics Report",
+          LEFT + 25,
+          170,
           {
-            align: "center",
+            width: 450,
+            lineGap: 2,
           }
         );
 
-
       doc
-        .moveDown(0.5)
-        .fontSize(9)
+        .font(
+          "Helvetica"
+        )
+        .fontSize(
+          11
+        )
         .fillColor(
-          "gray"
+          COLORS.muted
         )
         .text(
-          `Generated: ${new Date().toLocaleString()}`,
+          "A structured view of recorded opinion poll activity, contest response distribution and geographic participation.",
+          LEFT + 25,
+          260,
           {
-            align: "center",
+            width: 410,
+            lineGap: 4,
           }
         );
 
-
-      doc.fillColor(
-        "black"
-      );
-
-
-      // ---------------------------------------------------------------------
-      // FILTERS
-      // ---------------------------------------------------------------------
-
-      section(
-        "Applied Filters"
-      );
-
-
-      const filterEntries = [
-
-        [
-          "Poll ID",
-          filters.pollId,
-        ],
-
-        [
-          "Poll Type",
-          filters.pollType,
-        ],
-
-        [
-          "Poll Status",
-          filters.pollStatus,
-        ],
-
-        [
-          "Position ID",
-          filters.positionId,
-        ],
-
-        [
-          "Candidate ID",
-          filters.candidateId,
-        ],
-
-        [
-          "Campaign ID",
-          filters.campaignId,
-        ],
-
-        [
-          "County ID",
-          filters.countyId,
-        ],
-
-        [
-          "Constituency ID",
-          filters.constituencyId,
-        ],
-
-        [
-          "Ward ID",
-          filters.wardId,
-        ],
-
-        [
-          "From",
-          filters.from,
-        ],
-
-        [
-          "To",
-          filters.to,
-        ],
-
-      ];
-
-
-      for (
-        const [
-          label,
-          value,
-        ] of filterEntries
-      ) {
-
-        doc
-          .fontSize(9)
-          .font(
-            "Helvetica-Bold"
-          )
-          .text(
-            `${label}: `,
-            {
-              continued: true,
-            }
-          )
-          .font(
-            "Helvetica"
-          )
-          .text(
-            value
-              ? String(value)
-              : "All"
-          );
-
-      }
-
-
-      // ---------------------------------------------------------------------
-      // OVERVIEW
-      // ---------------------------------------------------------------------
-
-      section(
-        "Overview"
-      );
-
-
-      const overview = [
-
-        [
-          "Answer Responses",
-          responses.length,
-        ],
-
-        [
-          "Unique Participants",
-          uniqueParticipants,
-        ],
-
-        [
-          "Polls",
-          uniquePolls,
-        ],
-
-        [
-          "Questions",
-          uniqueQuestions,
-        ],
-
-        [
-          "Counties",
-          uniqueCounties,
-        ],
-
-        [
-          "Constituencies",
-          uniqueConstituencies,
-        ],
-
-        [
-          "Wards",
-          uniqueWards,
-        ],
-
-      ];
-
-
-      for (
-        const [
-          label,
-          value,
-        ] of overview
-      ) {
-
-        doc
-          .fontSize(10)
-          .font(
-            "Helvetica-Bold"
-          )
-          .text(
-            `${label}: `,
-            {
-              continued: true,
-            }
-          )
-          .font(
-            "Helvetica"
-          )
-          .text(
-            String(value)
-          );
-
-      }
-
-
-      // ---------------------------------------------------------------------
-      // CONTEST / CANDIDATE RESULTS
-      // ---------------------------------------------------------------------
-
-      section(
-        "Candidate Results"
-      );
-
+      doc
+        .rect(
+          LEFT + 25,
+          340,
+          CONTENT_WIDTH - 50,
+          155
+        )
+        .fillColor(
+          COLORS.light
+        )
+        .fill();
 
       doc
-        .fontSize(8)
+        .font(
+          "Helvetica-Bold"
+        )
+        .fontSize(
+          8
+        )
         .fillColor(
-          "gray"
+          COLORS.blue
         )
         .text(
-          "Percentages are calculated within each question/contest using the recorded answer responses for that question under the selected filters."
+          "REPORT SNAPSHOT",
+          LEFT + 45,
+          362
         );
 
+      doc
+        .font(
+          "Helvetica-Bold"
+        )
+        .fontSize(
+          12
+        )
+        .fillColor(
+          COLORS.ink
+        )
+        .text(
+          `${formatNumber(responses.length)} recorded answers`,
+          LEFT + 45,
+          390
+        );
 
-      doc.fillColor(
-        "black"
+      doc
+        .font(
+          "Helvetica"
+        )
+        .fontSize(
+          9
+        )
+        .fillColor(
+          COLORS.muted
+        )
+        .text(
+          `${formatNumber(uniqueParticipants)} participants  •  ${formatNumber(uniquePolls)} polls  •  ${formatNumber(uniqueQuestions)} questions`,
+          LEFT + 45,
+          414
+        );
+
+      doc
+        .font(
+          "Helvetica"
+        )
+        .fontSize(
+          8
+        )
+        .fillColor(
+          COLORS.muted
+        )
+        .text(
+          `Data period: ${formatDate(oldestResponse)} — ${formatDate(latestResponse)}`,
+          LEFT + 45,
+          442
+        );
+
+      doc
+        .font(
+          "Helvetica"
+        )
+        .fontSize(
+          8
+        )
+        .fillColor(
+          COLORS.muted
+        )
+        .text(
+          `Generated: ${formatDateTime(today)}`,
+          LEFT + 45,
+          461
+        );
+
+      doc
+        .font(
+          "Helvetica-Bold"
+        )
+        .fontSize(
+          8
+        )
+        .fillColor(
+          COLORS.ink
+        )
+        .text(
+          "Prepared for analysis, media reference and public-interest reporting.",
+          LEFT + 45,
+          480
+        );
+
+      doc
+        .font(
+          "Helvetica"
+        )
+        .fontSize(
+          8
+        )
+        .fillColor(
+          COLORS.muted
+        )
+        .text(
+          "This document reports recorded responses collected through the SFD Insights platform. It is not an official election result, census or automatically representative sample.",
+          LEFT + 25,
+          545,
+          {
+            width:
+              CONTENT_WIDTH - 50,
+            lineGap: 3,
+          }
+        );
+
+      doc
+        .font(
+          "Helvetica-Bold"
+        )
+        .fontSize(
+          8
+        )
+        .fillColor(
+          COLORS.ink
+        )
+        .text(
+          "SFD INSIGHTS  /  KENYA",
+          LEFT + 25,
+          690
+        );
+
+      doc
+        .font(
+          "Helvetica"
+        )
+        .fontSize(
+          7
+        )
+        .fillColor(
+          COLORS.muted
+        )
+        .text(
+          "Independent online opinion polling and public-interest data presentation.",
+          LEFT + 25,
+          707
+        );
+
+      // --------------------------------------------------------------------
+      // EXECUTIVE SUMMARY
+      // --------------------------------------------------------------------
+
+      newPage(
+        "Executive Summary"
       );
 
-
-      doc.moveDown(
-        0.5
+      drawSectionTitle(
+        "At a glance",
+        "01  /  Executive summary"
       );
 
+      drawParagraph(
+        "This report describes recorded responses available under the selected reporting scope. Political contests are kept as separate analytical units according to their poll, question and geographic target."
+      );
+
+      const metricGap =
+        10;
+
+      const metricWidth =
+        (
+          CONTENT_WIDTH -
+          metricGap * 2
+        ) / 3;
+
+      let metricY =
+        doc.y;
+
+      drawMetric(
+        LEFT,
+        metricY,
+        metricWidth,
+        "Recorded answers",
+        formatNumber(
+          responses.length
+        )
+      );
+
+      drawMetric(
+        LEFT +
+          metricWidth +
+          metricGap,
+        metricY,
+        metricWidth,
+        "Participants",
+        formatNumber(
+          uniqueParticipants
+        )
+      );
+
+      drawMetric(
+        LEFT +
+          (
+            metricWidth +
+            metricGap
+          ) * 2,
+        metricY,
+        metricWidth,
+        "Polls",
+        formatNumber(
+          uniquePolls
+        )
+      );
+
+      metricY +=
+        84;
+
+      drawMetric(
+        LEFT,
+        metricY,
+        metricWidth,
+        "Questions",
+        formatNumber(
+          uniqueQuestions
+        )
+      );
+
+      drawMetric(
+        LEFT +
+          metricWidth +
+          metricGap,
+        metricY,
+        metricWidth,
+        "Counties",
+        formatNumber(
+          uniqueCounties
+        )
+      );
+
+      drawMetric(
+        LEFT +
+          (
+            metricWidth +
+            metricGap
+          ) * 2,
+        metricY,
+        metricWidth,
+        "Wards",
+        formatNumber(
+          uniqueWards
+        )
+      );
+
+      doc.y =
+        metricY +
+        92;
+
+      // --------------------------------------------------------------------
+      // CONTEST INDEX
+      // --------------------------------------------------------------------
+
+      /*
+       * IMPORTANT:
+       *
+       * Group directly using pollId + questionId.
+       *
+       * Never use poll title + question text.
+       */
+
+      const contestMap =
+        new Map<
+          string,
+          {
+            first: CandidateResult;
+            candidates: Set<string>;
+            responses: number;
+          }
+        >();
+
+      for (
+        const result of candidateResults
+      ) {
+        const key =
+          `${result.pollId}::${result.questionId}`;
+
+        const existing =
+          contestMap.get(
+            key
+          );
+
+        if (existing) {
+          existing.candidates.add(
+            result.candidateName
+          );
+
+          existing.responses +=
+            result.responses;
+        } else {
+          contestMap.set(
+            key,
+            {
+              first:
+                result,
+
+              candidates:
+                new Set([
+                  result.candidateName,
+                ]),
+
+              responses:
+                result.responses,
+            }
+          );
+        }
+      }
+
+      if (
+        contestMap.size > 0
+      ) {
+        drawSectionTitle(
+          "Contests covered",
+          "Political contest index"
+        );
+
+        drawParagraph(
+          "Each contest is treated as its own analytical unit. Geographic scope is taken directly from the poll configuration. Contests from different counties, constituencies or wards are not combined merely because they concern the same political position."
+        );
+
+        const contestColumns = [
+          {
+            title: "Position",
+            x: LEFT,
+            width: 90,
+          },
+          {
+            title: "Geographic scope",
+            x: LEFT + 95,
+            width: 220,
+          },
+          {
+            title: "Candidates",
+            x: LEFT + 320,
+            width: 70,
+          },
+          {
+            title: "Answers",
+            x: LEFT + 395,
+            width: 80,
+          },
+        ];
+
+        drawTableHeader(
+          contestColumns
+        );
+
+        let contestIndex = 0;
+
+        for (
+          const contest of contestMap.values()
+        ) {
+          const first =
+            contest.first;
+
+          drawTableRow(
+            [
+              truncate(
+                first.position ||
+                  "General",
+                20
+              ),
+
+              truncate(
+                getCandidateScope(
+                  first
+                ),
+                45
+              ),
+
+              formatNumber(
+                contest.candidates.size
+              ),
+
+              formatNumber(
+                contest.responses
+              ),
+            ],
+            contestColumns,
+            contestIndex % 2 === 1,
+            "Contest Index"
+          );
+
+          contestIndex++;
+        }
+      }
+
+      // --------------------------------------------------------------------
+      // POLL OVERVIEW
+      // --------------------------------------------------------------------
+
+      newPage(
+        "Poll Overview"
+      );
+
+      drawSectionTitle(
+        "Poll activity",
+        "02  /  Poll overview"
+      );
+
+      drawParagraph(
+        "This section identifies the polls represented in the selected dataset and shows the geographic target attached to each poll."
+      );
+
+      if (
+        pollSummaries.length === 0
+      ) {
+        drawParagraph(
+          "No poll activity was found for the selected reporting scope."
+        );
+      } else {
+        const pollColumns = [
+          {
+            title: "Poll",
+            x: LEFT,
+            width: 155,
+          },
+          {
+            title: "Position",
+            x: LEFT + 160,
+            width: 75,
+          },
+          {
+            title: "Scope",
+            x: LEFT + 240,
+            width: 175,
+          },
+          {
+            title: "Answers",
+            x: LEFT + 420,
+            width: 65,
+          },
+        ];
+
+        drawTableHeader(
+          pollColumns
+        );
+
+        pollSummaries.forEach(
+          (
+            poll,
+            index
+          ) => {
+            const scope =
+              [
+                poll.ward
+                  ? `Ward: ${poll.ward}`
+                  : "",
+
+                poll.constituency
+                  ? `Constituency: ${poll.constituency}`
+                  : "",
+
+                poll.county
+                  ? `County: ${poll.county}`
+                  : "",
+              ]
+                .filter(Boolean)
+                .join(
+                  "  •  "
+                ) ||
+              "National / general";
+
+            drawTableRow(
+              [
+                truncate(
+                  poll.title,
+                  32
+                ),
+
+                truncate(
+                  poll.position,
+                  17
+                ),
+
+                truncate(
+                  scope,
+                  42
+                ),
+
+                formatNumber(
+                  poll.responses
+                ),
+              ],
+              pollColumns,
+              index % 2 === 1,
+              "Poll Overview"
+            );
+          }
+        );
+      }
+
+      // --------------------------------------------------------------------
+      // CONTEST RESULTS
+      // --------------------------------------------------------------------
+
+      newPage(
+        "Contest Results"
+      );
+
+      drawSectionTitle(
+        "Contest response distribution",
+        "03  /  Political results"
+      );
+
+      drawParagraph(
+        "Each contest below is shown within its own poll question and geographic scope. Percentages represent the share of recorded answers calculated by the polling platform for that question. Candidate ordering follows the configured poll option order and should not be interpreted as an electoral ranking."
+      );
 
       if (
         candidateResults.length === 0
       ) {
-
-        doc
-          .fontSize(9)
-          .text(
-            "No candidate results were found for the selected filters."
-          );
-
+        drawParagraph(
+          "No candidate results were found for the selected reporting scope."
+        );
       } else {
+        /*
+         * ---------------------------------------------------------------
+         * GROUP BY REAL DATABASE IDENTIFIERS
+         * ---------------------------------------------------------------
+         *
+         * This is the critical fix.
+         *
+         * pollId + questionId uniquely identifies the contest.
+         *
+         * We do NOT use:
+         *
+         *     poll.title
+         *     question.text
+         *
+         * because two polls can have the same title/question.
+         */
 
-        drawTableHeader([
-          "Candidate",
-          "Party",
-          "Responses",
-          "%",
-        ]);
-
-
-        // Group candidates by poll + question so percentages are
-        // understood in their correct contest.
-        let previousContest =
-          "";
-
+        const grouped =
+          new Map<
+            string,
+            CandidateResult[]
+          >();
 
         for (
           const result of candidateResults
         ) {
+          const key =
+            `${result.pollId}::${result.questionId}`;
 
-          const contest =
-            `${result.poll} — ${result.question}`;
-
-
-          if (
-            contest !==
-            previousContest
-          ) {
-
-            if (
-              previousContest
-            ) {
-
-              doc.moveDown(
-                0.5
-              );
-
-            }
-
-
-            ensureSpace(
-              55
+          const existing =
+            grouped.get(
+              key
             );
 
-
-            doc
-              .fontSize(9)
-              .font(
-                "Helvetica-Bold"
-              )
-              .text(
-                contest
-              );
-
-
-            doc.moveDown(
-              0.25
+          if (existing) {
+            existing.push(
+              result
             );
-
-
-            previousContest =
-              contest;
-
+          } else {
+            grouped.set(
+              key,
+              [result]
+            );
           }
-
-
-          drawTableRow([
-
-            result.candidateName,
-
-            result.party ||
-              "Independent / Not specified",
-
-            result.responses,
-
-            `${result.percentage}%`,
-
-          ]);
-
         }
-
-      }
-
-
-      // ---------------------------------------------------------------------
-      // QUESTION RESULTS
-      // ---------------------------------------------------------------------
-
-      section(
-        "Question Summary"
-      );
-
-
-      if (
-        questionResults.length === 0
-      ) {
-
-        doc
-          .fontSize(9)
-          .text(
-            "No question-level results were found."
-          );
-
-      } else {
-
-        drawTableHeader([
-          "Poll",
-          "Question",
-          "Responses",
-        ]);
-
 
         for (
-          const result of questionResults
+          const results of grouped.values()
         ) {
-
-          drawTableRow([
-
-            result.poll,
-
-            result.question,
-
-            result.responses,
-
-          ]);
-
-        }
-
-      }
-
-
-      // ---------------------------------------------------------------------
-      // COUNTY RESULTS
-      // ---------------------------------------------------------------------
-
-      section(
-        "County Breakdown"
-      );
-
-
-      if (
-        countyResults.length === 0
-      ) {
-
-        doc
-          .fontSize(9)
-          .text(
-            "No county-level results were found."
-          );
-
-      } else {
-
-        drawTableHeader([
-          "County",
-          "Responses",
-          "Participants",
-          "%",
-        ]);
-
-
-        for (
-          const result of countyResults
-        ) {
-
-          drawTableRow([
-
-            result.name,
-
-            result.responses,
-
-            result.participants,
-
-            `${result.percentage}%`,
-
-          ]);
-
-        }
-
-      }
-
-
-      // ---------------------------------------------------------------------
-      // CONSTITUENCY RESULTS
-      // ---------------------------------------------------------------------
-
-      section(
-        "Constituency Breakdown"
-      );
-
-
-      if (
-        constituencyResults.length === 0
-      ) {
-
-        doc
-          .fontSize(9)
-          .text(
-            "No constituency-level results were found."
-          );
-
-      } else {
-
-        drawTableHeader([
-          "Constituency",
-          "Responses",
-          "Participants",
-          "%",
-        ]);
-
-
-        for (
-          const result of constituencyResults
-        ) {
-
-          drawTableRow([
-
-            result.name,
-
-            result.responses,
-
-            result.participants,
-
-            `${result.percentage}%`,
-
-          ]);
-
-        }
-
-      }
-
-
-      // ---------------------------------------------------------------------
-      // WARD RESULTS
-      // ---------------------------------------------------------------------
-
-      section(
-        "Ward Breakdown"
-      );
-
-
-      if (
-        wardResults.length === 0
-      ) {
-
-        doc
-          .fontSize(9)
-          .text(
-            "No ward-level results were found."
-          );
-
-      } else {
-
-        drawTableHeader([
-          "Ward",
-          "Responses",
-          "Participants",
-          "%",
-        ]);
-
-
-        for (
-          const result of wardResults
-        ) {
-
-          drawTableRow([
-
-            result.name,
-
-            result.responses,
-
-            result.participants,
-
-            `${result.percentage}%`,
-
-          ]);
-
-        }
-
-      }
-
-
-      // ---------------------------------------------------------------------
-      // RESPONSE DETAILS
-      // ---------------------------------------------------------------------
-
-      section(
-        "Individual Response Details"
-      );
-
-
-      if (
-        responses.length === 0
-      ) {
-
-        doc
-          .fontSize(10)
-          .font(
-            "Helvetica"
-          )
-          .text(
-            "No responses match the selected filters."
-          );
-
-      }
-
-
-      responses.forEach(
-        (
-          response,
-          index
-        ) => {
+          const first =
+            results[0];
+
+          const position =
+            first.position ||
+            "Political position";
+
+          const scope =
+            getCandidateScope(
+              first
+            );
+
+          const scopeLevel =
+            getCandidateScopeLevel(
+              first
+            );
+
+          // --------------------------------------------------------------
+          // CONTEST HEADER
+          // --------------------------------------------------------------
 
           ensureSpace(
-            150
+            160,
+            "Contest Results"
           );
 
-
-          const candidate =
-            response.option
-              .candidate;
-
+          const headerY =
+            doc.y;
 
           doc
-            .fontSize(9)
+            .rect(
+              LEFT,
+              headerY,
+              CONTENT_WIDTH,
+              96
+            )
+            .fillColor(
+              COLORS.light
+            )
+            .fill();
+
+          doc
+            .rect(
+              LEFT,
+              headerY,
+              4,
+              96
+            )
+            .fillColor(
+              COLORS.blue
+            )
+            .fill();
+
+          doc
             .font(
               "Helvetica-Bold"
             )
+            .fontSize(
+              7
+            )
+            .fillColor(
+              COLORS.blue
+            )
             .text(
-              `${index + 1}. ${response.poll.title}`
+              scopeLevel,
+              LEFT + 16,
+              headerY + 12,
+              {
+                lineBreak: false,
+              }
             );
 
+          doc
+            .font(
+              "Helvetica-Bold"
+            )
+            .fontSize(
+              13
+            )
+            .fillColor(
+              COLORS.ink
+            )
+            .text(
+              position,
+              LEFT + 16,
+              headerY + 27,
+              {
+                width:
+                  CONTENT_WIDTH - 32,
+                lineBreak: false,
+              }
+            );
+
+          doc
+            .font(
+              "Helvetica-Bold"
+            )
+            .fontSize(
+              8
+            )
+            .fillColor(
+              COLORS.ink
+            )
+            .text(
+              scope,
+              LEFT + 16,
+              headerY + 48,
+              {
+                width:
+                  CONTENT_WIDTH - 32,
+                lineBreak: false,
+              }
+            );
 
           doc
             .font(
               "Helvetica"
             )
+            .fontSize(
+              7.5
+            )
+            .fillColor(
+              COLORS.muted
+            )
             .text(
-              `Poll Type: ${response.poll.type}`
+              `Poll: ${truncate(first.poll, 90)}`,
+              LEFT + 16,
+              headerY + 64,
+              {
+                width:
+                  CONTENT_WIDTH - 32,
+                lineBreak: false,
+              }
             );
 
+          doc
+            .font(
+              "Helvetica-Bold"
+            )
+            .fontSize(
+              8
+            )
+            .fillColor(
+              COLORS.ink
+            )
+            .text(
+              truncate(
+                first.question,
+                110
+              ),
+              LEFT + 16,
+              headerY + 78,
+              {
+                width:
+                  CONTENT_WIDTH - 32,
+                lineBreak: false,
+              }
+            );
 
-          doc.text(
-            `Poll Status: ${response.poll.status}`
-          );
+          doc.y =
+            headerY +
+            112;
 
+          // --------------------------------------------------------------
+          // CONTEST SUMMARY
+          // --------------------------------------------------------------
 
-          doc.text(
-            `Position: ${
-              response.poll.position?.name
-                ?? "N/A"
-            }`
-          );
+          const totalContestResponses =
+            results.reduce(
+              (
+                total,
+                result
+              ) =>
+                total +
+                result.responses,
+              0
+            );
 
+          const summaryWidth =
+            (
+              CONTENT_WIDTH - 10
+            ) / 2;
 
-          if (
-            response.poll.campaign
+          doc
+            .rect(
+              LEFT,
+              doc.y,
+              summaryWidth,
+              48
+            )
+            .fillColor(
+              COLORS.light
+            )
+            .fill();
+
+          doc
+            .font(
+              "Helvetica-Bold"
+            )
+            .fontSize(
+              15
+            )
+            .fillColor(
+              COLORS.ink
+            )
+            .text(
+              formatNumber(
+                totalContestResponses
+              ),
+              LEFT + 12,
+              doc.y + 9
+            );
+
+          doc
+            .font(
+              "Helvetica"
+            )
+            .fontSize(
+              7
+            )
+            .fillColor(
+              COLORS.muted
+            )
+            .text(
+              "RECORDED ANSWERS",
+              LEFT + 12,
+              doc.y + 30
+            );
+
+          doc
+            .rect(
+              LEFT +
+                summaryWidth +
+                10,
+              doc.y,
+              summaryWidth,
+              48
+            )
+            .fillColor(
+              COLORS.light
+            )
+            .fill();
+
+          doc
+            .font(
+              "Helvetica-Bold"
+            )
+            .fontSize(
+              15
+            )
+            .fillColor(
+              COLORS.ink
+            )
+            .text(
+              formatNumber(
+                results.length
+              ),
+              LEFT +
+                summaryWidth +
+                22,
+              doc.y + 9
+            );
+
+          doc
+            .font(
+              "Helvetica"
+            )
+            .fontSize(
+              7
+            )
+            .fillColor(
+              COLORS.muted
+            )
+            .text(
+              "CANDIDATE OPTIONS",
+              LEFT +
+                summaryWidth +
+                22,
+              doc.y + 30
+            );
+
+          doc.y +=
+            66;
+
+          // --------------------------------------------------------------
+          // CANDIDATE DISTRIBUTION
+          // --------------------------------------------------------------
+
+          const labelWidth =
+            155;
+
+          const barWidth =
+            250;
+
+          const percentX =
+            LEFT +
+            labelWidth +
+            barWidth +
+            15;
+
+          for (
+            const result of results
           ) {
-
-            doc.text(
-              `Campaign: ${response.poll.campaign.name}`
+            ensureSpace(
+              46,
+              "Contest Results"
             );
 
-          }
+            const rowY =
+              doc.y;
 
-
-          doc.text(
-            `Question: ${response.question.question}`
-          );
-
-
-          doc.text(
-            `Selected Option: ${response.option.label}`
-          );
-
-
-          if (
-            candidate
-          ) {
-
-            doc.text(
-              `Candidate: ${candidate.name}`
-            );
-
-
-            if (
-              candidate.party
-            ) {
-
-              doc.text(
-                `Party: ${candidate.party}`
+            const percentage =
+              Math.max(
+                0,
+                Math.min(
+                  100,
+                  Number(
+                    result.percentage
+                  ) || 0
+                )
               );
 
+            doc
+              .font(
+                "Helvetica-Bold"
+              )
+              .fontSize(
+                8.5
+              )
+              .fillColor(
+                COLORS.ink
+              )
+              .text(
+                truncate(
+                  result.candidateName,
+                  28
+                ),
+                LEFT,
+                rowY,
+                {
+                  width:
+                    labelWidth - 8,
+                  lineBreak: false,
+                }
+              );
+
+            doc
+              .font(
+                "Helvetica"
+              )
+              .fontSize(
+                6.8
+              )
+              .fillColor(
+                COLORS.muted
+              )
+              .text(
+                truncate(
+                  result.party ||
+                    "Independent / Not specified",
+                  30
+                ),
+                LEFT,
+                rowY + 13,
+                {
+                  width:
+                    labelWidth - 8,
+                  lineBreak: false,
+                }
+              );
+
+            // Track
+            doc
+              .rect(
+                LEFT +
+                  labelWidth,
+                rowY + 5,
+                barWidth,
+                8
+              )
+              .fillColor(
+                COLORS.border
+              )
+              .fill();
+
+            // Value
+            if (
+              percentage > 0
+            ) {
+              doc
+                .rect(
+                  LEFT +
+                    labelWidth,
+                  rowY + 5,
+                  Math.max(
+                    2,
+                    barWidth *
+                      (
+                        percentage /
+                        100
+                      )
+                  ),
+                  8
+                )
+                .fillColor(
+                  COLORS.blue
+                )
+                .fill();
             }
 
+            doc
+              .font(
+                "Helvetica-Bold"
+              )
+              .fontSize(
+                9
+              )
+              .fillColor(
+                COLORS.ink
+              )
+              .text(
+                `${percentage}%`,
+                percentX,
+                rowY,
+                {
+                  width: 48,
+                  align: "right",
+                  lineBreak: false,
+                }
+              );
+
+            doc
+              .font(
+                "Helvetica"
+              )
+              .fontSize(
+                6.5
+              )
+              .fillColor(
+                COLORS.muted
+              )
+              .text(
+                `${formatNumber(
+                  result.responses
+                )} answers`,
+                percentX - 5,
+                rowY + 13,
+                {
+                  width: 53,
+                  align: "right",
+                  lineBreak: false,
+                }
+              );
+
+            doc.y =
+              rowY +
+              34;
           }
 
+          // --------------------------------------------------------------
+          // CONTEST INTERPRETATION
+          // --------------------------------------------------------------
 
-          doc.text(
-            `Location: ${
-              response.county?.name
-                ?? "N/A"
-            } / ${
-              response.constituency?.name
-                ?? "N/A"
-            } / ${
-              response.ward?.name
-                ?? "N/A"
-            }`
+          ensureSpace(
+            55,
+            "Contest Results"
           );
 
+          doc
+            .rect(
+              LEFT,
+              doc.y,
+              CONTENT_WIDTH,
+              45
+            )
+            .fillColor(
+              COLORS.light
+            )
+            .fill();
 
-          doc.text(
-            `Poll Target: ${
-              response.poll.targetCounty?.name
-                ?? "N/A"
-            } / ${
-              response.poll.targetConstituency?.name
-                ?? "N/A"
-            } / ${
-              response.poll.targetWard?.name
-                ?? "N/A"
-            }`
-          );
+          doc
+            .font(
+              "Helvetica-Bold"
+            )
+            .fontSize(
+              7
+            )
+            .fillColor(
+              COLORS.ink
+            )
+            .text(
+              "HOW TO READ THIS CONTEST",
+              LEFT + 12,
+              doc.y + 9
+            );
 
+          doc
+            .font(
+              "Helvetica"
+            )
+            .fontSize(
+              7
+            )
+            .fillColor(
+              COLORS.muted
+            )
+            .text(
+              "Percentages describe the distribution of recorded answers within this specific poll question and geographic scope. They are not population estimates and should not be compared with a different geographic contest unless the underlying poll explicitly defines a common comparison scope.",
+              LEFT + 12,
+              doc.y + 21,
+              {
+                width:
+                  CONTENT_WIDTH - 24,
+                lineGap: 1.5,
+              }
+            );
 
-          doc.text(
-            `Participant ID: ${response.participantId}`
-          );
-
-
-          doc.text(
-            `Response ID: ${response.id}`
-          );
-
-
-          doc.text(
-            `Date: ${response.createdAt.toLocaleString()}`
-          );
-
-
-          doc.moveDown(
-            0.8
-          );
-
+          doc.y +=
+            58;
         }
+      }
+
+      // --------------------------------------------------------------------
+      // QUESTION SUMMARY
+      // --------------------------------------------------------------------
+
+      newPage(
+        "Question Summary"
       );
 
-
-      // ---------------------------------------------------------------------
-      // METHODOLOGY NOTE
-      // ---------------------------------------------------------------------
-
-      section(
-        "Report Note"
+      drawSectionTitle(
+        "Question activity",
+        "04  /  Question summary"
       );
 
+      drawParagraph(
+        "This section shows recorded answer activity for each question within the selected reporting scope."
+      );
+
+      if (
+        questionResults.length === 0
+      ) {
+        drawParagraph(
+          "No question-level results were found."
+        );
+      } else {
+        const questionColumns = [
+          {
+            title: "Poll",
+            x: LEFT,
+            width: 165,
+          },
+          {
+            title: "Question",
+            x: LEFT + 170,
+            width: 265,
+          },
+          {
+            title: "Answers",
+            x: LEFT + 440,
+            width: 60,
+          },
+        ];
+
+        drawTableHeader(
+          questionColumns
+        );
+
+        questionResults.forEach(
+          (
+            result,
+            index
+          ) => {
+            drawTableRow(
+              [
+                truncate(
+                  result.poll,
+                  32
+                ),
+
+                truncate(
+                  result.question,
+                  63
+                ),
+
+                formatNumber(
+                  result.responses
+                ),
+              ],
+              questionColumns,
+              index % 2 === 1,
+              "Question Summary"
+            );
+          }
+        );
+      }
+
+      // --------------------------------------------------------------------
+      // GEOGRAPHIC DISTRIBUTION
+      // --------------------------------------------------------------------
+
+      const drawGeographySection =
+        (
+          title: string,
+          eyebrow: string,
+          results: GeographyResult[]
+        ) => {
+          newPage(
+            title
+          );
+
+          drawSectionTitle(
+            title,
+            eyebrow
+          );
+
+          drawParagraph(
+            "The figures below describe recorded platform participation associated with the selected geographic level. They should not be interpreted as population shares."
+          );
+
+          if (
+            results.length === 0
+          ) {
+            drawParagraph(
+              `No ${title.toLowerCase()} data were found for the selected reporting scope.`
+            );
+
+            return;
+          }
+
+          const columns = [
+            {
+              title: "Location",
+              x: LEFT,
+              width: 245,
+            },
+            {
+              title: "Participants",
+              x: LEFT + 250,
+              width: 90,
+            },
+            {
+              title: "Answers",
+              x: LEFT + 345,
+              width: 70,
+            },
+            {
+              title: "Share",
+              x: LEFT + 420,
+              width: 75,
+            },
+          ];
+
+          drawTableHeader(
+            columns
+          );
+
+          results.forEach(
+            (
+              result,
+              index
+            ) => {
+              drawTableRow(
+                [
+                  truncate(
+                    result.name,
+                    45
+                  ),
+
+                  formatNumber(
+                    result.participants
+                  ),
+
+                  formatNumber(
+                    result.responses
+                  ),
+
+                  `${result.percentage}%`,
+                ],
+                columns,
+                index % 2 === 1,
+                title
+              );
+            }
+          );
+        };
+
+      drawGeographySection(
+        "County distribution",
+        "05  /  Geographic participation",
+        countyResults
+      );
+
+      drawGeographySection(
+        "Constituency distribution",
+        "06  /  Geographic participation",
+        constituencyResults
+      );
+
+      drawGeographySection(
+        "Ward distribution",
+        "07  /  Geographic participation",
+        wardResults
+      );
+
+      // --------------------------------------------------------------------
+      // METHODOLOGY
+      // --------------------------------------------------------------------
+
+      newPage(
+        "Methodology & Notes"
+      );
+
+      drawSectionTitle(
+        "Methodology & interpretation",
+        "08  /  Report notes"
+      );
+
+      drawParagraph(
+        "This document is generated from recorded online responses stored by the SFD Insights polling platform under the selected filters. It provides an administrative and media-readable summary of the available platform data."
+      );
+
+      const noteBlocks = [
+        {
+          title:
+            "Recorded answers",
+
+          text:
+            "An answer represents a recorded response to a poll question. The total answer count may therefore differ from the number of distinct participants because one participant can answer more than one question.",
+        },
+
+        {
+          title:
+            "Participants",
+
+          text:
+            "Participant totals represent distinct participant identifiers within the selected reporting scope. They should not automatically be interpreted as a census of all people who viewed or were eligible to participate.",
+        },
+
+        {
+          title:
+            "Contest percentages",
+
+          text:
+            "Candidate percentages describe the distribution of recorded answers within the specific poll question and geographic scope shown in the contest section. Separate contests are not combined simply because they involve the same political position.",
+        },
+
+        {
+          title:
+            "Geographic participation",
+
+          text:
+            "County, constituency and ward figures describe platform participation associated with those geographic groups. They are not population estimates or measures of population representation.",
+        },
+
+        {
+          title:
+            "Candidate filtering",
+
+          text:
+            "When a candidate is selected as an administrative filter, the relevant contest remains contextualized with the other candidates in that same contest where the underlying poll data supports it.",
+        },
+
+        {
+          title:
+            "Interpretation",
+
+          text:
+            "Poll results should be considered together with collection period, target population, geographic scope, question wording, participation method and any methodology disclosed for the specific poll.",
+        },
+      ];
+
+      for (
+        const note of noteBlocks
+      ) {
+        ensureSpace(
+          90,
+          "Methodology & Notes"
+        );
+
+        doc
+          .font(
+            "Helvetica-Bold"
+          )
+          .fontSize(
+            9
+          )
+          .fillColor(
+            COLORS.ink
+          )
+          .text(
+            note.title
+          );
+
+        doc.moveDown(
+          0.2
+        );
+
+        doc
+          .font(
+            "Helvetica"
+          )
+          .fontSize(
+            8.5
+          )
+          .fillColor(
+            COLORS.muted
+          )
+          .text(
+            note.text,
+            {
+              width:
+                CONTENT_WIDTH,
+              lineGap: 2,
+            }
+          );
+
+        doc.moveDown(
+          0.8
+        );
+      }
+
+      // --------------------------------------------------------------------
+      // FINAL DISCLOSURE
+      // --------------------------------------------------------------------
+
+      ensureSpace(
+        115,
+        "Methodology & Notes"
+      );
+
+      const disclosureY =
+        doc.y;
 
       doc
-        .fontSize(9)
+        .rect(
+          LEFT,
+          disclosureY,
+          CONTENT_WIDTH,
+          92
+        )
+        .fillColor(
+          COLORS.light
+        )
+        .fill();
+
+      doc
+        .font(
+          "Helvetica-Bold"
+        )
+        .fontSize(
+          9
+        )
+        .fillColor(
+          COLORS.ink
+        )
+        .text(
+          "IMPORTANT DATA DISCLOSURE",
+          LEFT + 15,
+          disclosureY + 14,
+          {
+            lineBreak: false,
+          }
+        );
+
+      doc
         .font(
           "Helvetica"
         )
+        .fontSize(
+          8
+        )
+        .fillColor(
+          COLORS.muted
+        )
         .text(
-          "This report contains administrative statistics from recorded online poll responses under the selected filters. Response counts represent recorded answer submissions, while participant counts represent distinct participant identifiers."
+          "SFD Insights presents recorded online opinion data. These figures are not official election results, census figures or a guarantee of statistical representation of the wider Kenyan population. Media and other users should review the methodology and collection context before drawing broader conclusions.",
+          LEFT + 15,
+          disclosureY + 34,
+          {
+            width:
+              CONTENT_WIDTH - 30,
+            lineGap: 2,
+          }
         );
 
+      // --------------------------------------------------------------------
+      // PAGE NUMBERS / FOOTERS
+      // --------------------------------------------------------------------
 
-      doc.moveDown();
-
-
-      doc.text(
-        "Candidate percentages are calculated within the applicable question or contest. Candidates with no recorded responses are included where they are configured as active options for the selected contest."
-      );
-
-
-      doc.moveDown();
-
-
-      doc.text(
-        "When a candidate is selected as a filter, the export uses that candidate to identify the relevant contest and retains the other candidates in that contest so that their results can be compared within the same report."
-      );
-
-
-      doc.moveDown();
-
-
-      doc.text(
-        "The figures should be interpreted together with the applicable poll methodology, sampling approach, geographic coverage, dates, and other disclosed limitations."
-      );
-
-
-      // ---------------------------------------------------------------------
-      // PAGE NUMBERS
-      // ---------------------------------------------------------------------
+      /*
+       * Capture the pages BEFORE drawing the footers.
+       *
+       * The footer uses absolute coordinates and cannot create a new page.
+       */
 
       const pageRange =
         doc.bufferedPageRange();
 
+      const totalPages =
+        pageRange.count;
 
       for (
         let page =
@@ -2991,66 +4590,44 @@ router.get(
 
         page++
       ) {
-
         doc.switchToPage(
           page
         );
 
-
-        doc
-          .fontSize(8)
-          .fillColor(
-            "gray"
-          )
-          .text(
-            `Kenya Opinion Polls — Page ${
-              page + 1
-            } of ${
-              pageRange.count
-            }`,
-            45,
-            800,
-            {
-              align: "center",
-              width: 505,
-            }
-          );
-
+        drawPageFooter(
+          page + 1,
+          totalPages
+        );
       }
 
+      // --------------------------------------------------------------------
+      // FINISH
+      // --------------------------------------------------------------------
 
       doc.end();
 
     } catch (error) {
-
       console.error(
         "PDF export error:",
         error
       );
 
-
       if (
         !res.headersSent
       ) {
-
         return res.status(
           500
         ).json({
-
-          success: false,
+          success:
+            false,
 
           message:
             "Failed to generate PDF export",
-
         });
-
       }
-
     }
-
   }
 );
-
 
 // --------------------------------------------------------------------------
 // EXPORT ROUTER

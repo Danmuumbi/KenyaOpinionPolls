@@ -25,19 +25,19 @@ import type {
   AdminPoll,
 } from "../api/admin";
 
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
+
+import "./Dashboard.css";
+
 export default function Dashboard() {
-  const navigate =
-    useNavigate();
+  const navigate = useNavigate();
 
   const [admin, setAdmin] =
-    useState<Admin | null>(
-      null
-    );
+    useState<Admin | null>(null);
 
   const [polls, setPolls] =
-    useState<AdminPoll[]>(
-      []
-    );
+    useState<AdminPoll[]>([]);
 
   const [loading, setLoading] =
     useState(true);
@@ -84,11 +84,10 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <main>
-        <p>
-          Loading dashboard...
-        </p>
-      </main>
+      <div className="dashboard-loading">
+        <div className="dashboard-loading__line" />
+        <p>Loading dashboard...</p>
+      </div>
     );
   }
 
@@ -112,180 +111,491 @@ export default function Dashboard() {
     polls.reduce(
       (total, poll) =>
         total +
-        (poll._count?.responses ||
-          0),
+        (poll._count?.responses || 0),
       0
     );
 
+  const recentPolls =
+    polls.slice(0, 5);
+
   return (
-    <main>
-      <header>
-        <h1>
-          Kenya Opinion Polls
-        </h1>
+    <div className="dashboard-page">
+      <Navbar />
 
-        <p>
-          Admin Dashboard
-        </p>
+      <main className="dashboard-main">
 
-        <p>
-          Welcome,{" "}
-          <strong>
-            {admin.name}
-          </strong>
-        </p>
+        {/* =====================================================
+            PAGE HEADER
+        ===================================================== */}
 
-        <button
-          onClick={
-            handleLogout
-          }
-        >
-          Logout
-        </button>
-      </header>
+        <section className="dashboard-intro">
+          <div>
+            <div className="dashboard-kicker">
+              SFD INSIGHTS / ADMIN
+            </div>
 
-      <hr />
-
-      {error && (
-        <p>
-          <strong>Error:</strong>{" "}
-          {error}
-        </p>
-      )}
-
-      <section>
-        <h2>
-          Overview
-        </h2>
-
-        <div>
-          <article>
-            <h3>
-              Total Polls
-            </h3>
+            <h1>
+              Dashboard
+            </h1>
 
             <p>
-              {polls.length}
+              Manage polls, monitor activity,
+              and access your platform statistics.
             </p>
-          </article>
+          </div>
 
-          <article>
-            <h3>
-              Active Polls
-            </h3>
+          <div className="dashboard-intro__right">
+            <div className="dashboard-user">
+              <span className="dashboard-user__label">
+                Signed in as
+              </span>
+
+              <strong>
+                {admin.name}
+              </strong>
+            </div>
+
+            <button
+              type="button"
+              className="dashboard-logout"
+              onClick={handleLogout}
+            >
+              Logout
+            </button>
+          </div>
+        </section>
+
+
+        {/* =====================================================
+            ERROR
+        ===================================================== */}
+
+        {error && (
+          <div className="dashboard-error">
+            <strong>
+              Error
+            </strong>
+
+            <span>
+              {error}
+            </span>
+          </div>
+        )}
+
+
+        {/* =====================================================
+            OVERVIEW
+        ===================================================== */}
+
+        <section className="dashboard-section">
+
+          <div className="dashboard-section__heading">
+            <div>
+              <span className="dashboard-section__number">
+                01
+              </span>
+
+              <div>
+                <h2>
+                  Overview
+                </h2>
+
+                <p>
+                  Current polling activity across the platform.
+                </p>
+              </div>
+            </div>
+          </div>
+
+
+          <div className="dashboard-stats">
+
+            <article className="dashboard-stat dashboard-stat--primary">
+              <div className="dashboard-stat__top">
+                <span>
+                  TOTAL POLLS
+                </span>
+
+                <span className="dashboard-stat__index">
+                  01
+                </span>
+              </div>
+
+              <strong>
+                {polls.length}
+              </strong>
+
+              <p>
+                Polls currently managed by the platform.
+              </p>
+            </article>
+
+
+            <article className="dashboard-stat">
+              <div className="dashboard-stat__top">
+                <span>
+                  ACTIVE
+                </span>
+
+                <span className="dashboard-stat__index">
+                  02
+                </span>
+              </div>
+
+              <strong>
+                {activePolls}
+              </strong>
+
+              <p>
+                Polls currently accepting responses.
+              </p>
+            </article>
+
+
+            <article className="dashboard-stat">
+              <div className="dashboard-stat__top">
+                <span>
+                  DRAFTS
+                </span>
+
+                <span className="dashboard-stat__index">
+                  03
+                </span>
+              </div>
+
+              <strong>
+                {draftPolls}
+              </strong>
+
+              <p>
+                Polls still being prepared.
+              </p>
+            </article>
+
+
+            <article className="dashboard-stat dashboard-stat--responses">
+              <div className="dashboard-stat__top">
+                <span>
+                  RESPONSES
+                </span>
+
+                <span className="dashboard-stat__index">
+                  04
+                </span>
+              </div>
+
+              <strong>
+                {totalResponses.toLocaleString()}
+              </strong>
+
+              <p>
+                Responses recorded across polls.
+              </p>
+            </article>
+
+          </div>
+        </section>
+
+
+        {/* =====================================================
+            MANAGEMENT
+        ===================================================== */}
+
+        <section className="dashboard-section">
+
+          <div className="dashboard-section__heading">
+            <div>
+              <span className="dashboard-section__number">
+                02
+              </span>
+
+              <div>
+                <h2>
+                  Poll management
+                </h2>
+
+                <p>
+                  Create, organise and maintain your polling content.
+                </p>
+              </div>
+            </div>
+          </div>
+
+
+          <div className="dashboard-management">
+
+            <Link
+              to="/admin/polls"
+              className="dashboard-action"
+            >
+              <span className="dashboard-action__number">
+                01
+              </span>
+
+              <span className="dashboard-action__content">
+                <strong>
+                  Manage Polls
+                </strong>
+
+                <small>
+                  View and manage existing polls
+                </small>
+              </span>
+
+              <span className="dashboard-action__arrow">
+                →
+              </span>
+            </Link>
+
+
+            <Link
+              to="/admin/polls/create"
+              className="dashboard-action dashboard-action--featured"
+            >
+              <span className="dashboard-action__number">
+                02
+              </span>
+
+              <span className="dashboard-action__content">
+                <strong>
+                  Create New Poll
+                </strong>
+
+                <small>
+                  Start a new public opinion poll
+                </small>
+              </span>
+
+              <span className="dashboard-action__arrow">
+                →
+              </span>
+            </Link>
+
+
+            <Link
+              to="/admin/candidates"
+              className="dashboard-action"
+            >
+              <span className="dashboard-action__number">
+                03
+              </span>
+
+              <span className="dashboard-action__content">
+                <strong>
+                  Manage Candidates
+                </strong>
+
+                <small>
+                  Maintain candidate information
+                </small>
+              </span>
+
+              <span className="dashboard-action__arrow">
+                →
+              </span>
+            </Link>
+
+
+            <Link
+              to="/admin/featured-polls"
+              className="dashboard-action"
+            >
+              <span className="dashboard-action__number">
+                04
+              </span>
+
+              <span className="dashboard-action__content">
+                <strong>
+                  Featured Polls
+                </strong>
+
+                <small>
+                  Control polls highlighted publicly
+                </small>
+              </span>
+
+              <span className="dashboard-action__arrow">
+                →
+              </span>
+            </Link>
+
+          </div>
+        </section>
+
+
+        {/* =====================================================
+            ANALYTICS
+        ===================================================== */}
+
+        <section className="dashboard-analytics">
+
+          <div className="dashboard-analytics__copy">
+
+            <span className="dashboard-analytics__label">
+              DATA &amp; ANALYSIS
+            </span>
+
+            <h2>
+              Analytics &amp;
+              <br />
+              Statistics
+            </h2>
 
             <p>
-              {activePolls}
+              Review detailed poll responses,
+              participant information, geographic
+              data, candidate results and statistical
+              analysis.
             </p>
-          </article>
 
-          <article>
-            <h3>
-              Draft Polls
-            </h3>
+            <Link
+              to="/admin/statistics"
+              className="dashboard-analytics__button"
+            >
+              View Statistics
+              <span>→</span>
+            </Link>
 
-            <p>
-              {draftPolls}
-            </p>
-          </article>
+          </div>
 
-          <article>
-            <h3>
-              Total Responses
-            </h3>
 
-            <p>
-              {totalResponses}
-            </p>
-          </article>
-        </div>
-      </section>
+          <div className="dashboard-analytics__visual">
 
-      <hr />
+            <div className="dashboard-analytics__grid" />
 
-      <section>
-        <h2>
-          Poll Management
-        </h2>
+            <div className="dashboard-analytics__bars">
 
-        <p>
-          <Link to="/admin/polls">
-            Manage Polls
-          </Link>
-        </p>
+              <span style={{ height: "38%" }} />
+              <span style={{ height: "56%" }} />
+              <span style={{ height: "46%" }} />
+              <span style={{ height: "72%" }} />
+              <span style={{ height: "64%" }} />
+              <span style={{ height: "86%" }} />
 
-        <p>
-          <Link to="/admin/polls/create">
-            Create New Poll
-          </Link>
-        </p>
+            </div>
 
-        <p>
-          <Link to="/admin/candidates">
-            Manage Candidates
-          </Link>
-        </p>
-      </section>
+            <div className="dashboard-analytics__caption">
+              POLL DATA
+            </div>
 
-      <hr />
+          </div>
 
-      <section>
-  <h2>
-    Analytics & Statistics
-  </h2>
+        </section>
 
-  <p>
-    View detailed poll responses,
-    participants, geographic data,
-    candidate results and statistical
-    analysis.
-  </p>
 
-  <Link to="/admin/statistics">
-    <button type="button">
-      View Statistics
-    </button>
-  </Link>
-</section>
+        {/* =====================================================
+            RECENT POLLS
+        ===================================================== */}
 
-      <section>
-        <h2>
-          Recent Polls
-        </h2>
+        <section className="dashboard-section dashboard-recent">
 
-        {polls.length ===
-        0 ? (
-          <p>
-            No polls have been
-            created yet.
-          </p>
-        ) : (
-          <ul>
-            {polls
-              .slice(0, 5)
-              .map((poll) => (
-                <li
+          <div className="dashboard-section__heading">
+            <div>
+              <span className="dashboard-section__number">
+                03
+              </span>
+
+              <div>
+                <h2>
+                  Recent polls
+                </h2>
+
+                <p>
+                  The latest polls available in the admin system.
+                </p>
+              </div>
+            </div>
+
+            <Link
+              to="/admin/polls"
+              className="dashboard-section__link"
+            >
+              View all polls →
+            </Link>
+          </div>
+
+
+          {recentPolls.length === 0 ? (
+
+            <div className="dashboard-empty">
+              <span>
+                NO POLLS
+              </span>
+
+              <h3>
+                No polls have been created yet.
+              </h3>
+
+              <p>
+                Create your first poll to begin collecting responses.
+              </p>
+
+              <Link
+                to="/admin/polls/create"
+                className="dashboard-empty__button"
+              >
+                Create a poll →
+              </Link>
+            </div>
+
+          ) : (
+
+            <div className="dashboard-poll-list">
+
+              {recentPolls.map((poll, index) => (
+
+                <article
+                  className="dashboard-poll"
                   key={poll.id}
                 >
-                  <strong>
-                    {poll.title}
-                  </strong>
 
-                  {" — "}
+                  <span className="dashboard-poll__number">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
 
-                  {poll.status}
 
-                  {" — "}
+                  <div className="dashboard-poll__main">
 
-                  {poll._count
-                    ?.responses ||
-                    0}{" "}
-                  responses
-                </li>
+                    <h3>
+                      {poll.title}
+                    </h3>
+
+                    <span>
+                      {poll._count?.responses || 0}{" "}
+                      responses
+                    </span>
+
+                  </div>
+
+
+                  <span
+                    className={`dashboard-status dashboard-status--${poll.status.toLowerCase()}`}
+                  >
+                    {poll.status}
+                  </span>
+
+
+                  <Link
+                    to={`/admin/polls`}
+                    className="dashboard-poll__arrow"
+                    aria-label={`Manage ${poll.title}`}
+                  >
+                    →
+                  </Link>
+
+                </article>
+
               ))}
-          </ul>
-        )}
-      </section>
-    </main>
+
+            </div>
+
+          )}
+
+        </section>
+
+      </main>
+
+      <Footer />
+    </div>
   );
 }

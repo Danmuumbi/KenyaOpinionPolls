@@ -21,6 +21,11 @@ import adminOptionRoutes from "./routes/admin-option.routes";
 import adminCandidateRoutes from "./routes/admin-candidate.routes";
 import publicRoutes from "./routes/public.routes";
 import adminStatisticsRoutes from "./routes/admin-statistics.routes";
+
+import featuredPollsRoutes from "./routes/featured-polls.routes";
+
+import publicFeaturedPollsRoutes from "./routes/public-featured-polls.routes";
+import adminPollEditRoutes from "./routes/admin-poll-edit.routes";
 const app = express();
 
 const PORT =
@@ -199,6 +204,22 @@ app.use("/api/public", publicRoutes);
 app.use(
   "/api/admin/statistics",
   adminStatisticsRoutes
+);
+
+app.use(
+  "/api/admin/featured-polls",
+  featuredPollsRoutes
+);
+
+app.use(
+  "/api/public/featured-polls",
+  publicFeaturedPollsRoutes
+);
+
+
+app.use(
+  "/api/admin/polls",
+  adminPollEditRoutes
 );
 
 /*

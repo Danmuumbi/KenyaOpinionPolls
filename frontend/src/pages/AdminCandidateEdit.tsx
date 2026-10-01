@@ -6,7 +6,6 @@ import {
 
 import {
   Link,
-  useNavigate,
   useParams,
 } from "react-router-dom";
 
@@ -20,6 +19,8 @@ import type {
   AdminCandidate,
   AdminPosition,
 } from "../api/admin";
+
+import "./AdminCandidateEdit.css";
 
 const API_URL = "http://localhost:5000/api";
 
@@ -43,17 +44,14 @@ interface Ward {
   constituencyId: string;
 }
 
-/*
-|--------------------------------------------------------------------------
-| Geography helper
-|--------------------------------------------------------------------------
-*/
+/* -------------------------------------------------------------------------- */
+/* Geography helper                                                           */
+/* -------------------------------------------------------------------------- */
 
 async function fetchGeography<T>(
   endpoint: string
 ): Promise<T[]> {
-  const token =
-    localStorage.getItem("token");
+  const token = localStorage.getItem("token");
 
   const response = await fetch(
     `${API_URL}${endpoint}`,
@@ -65,9 +63,7 @@ async function fetchGeography<T>(
   );
 
   const contentType =
-    response.headers.get(
-      "content-type"
-    ) || "";
+    response.headers.get("content-type") || "";
 
   if (!contentType.includes("application/json")) {
     await response.text();
@@ -89,19 +85,15 @@ async function fetchGeography<T>(
   return data.data as T[];
 }
 
-/*
-|--------------------------------------------------------------------------
-| Edit Candidate
-|--------------------------------------------------------------------------
-*/
+/* -------------------------------------------------------------------------- */
+/* Edit Candidate                                                             */
+/* -------------------------------------------------------------------------- */
 
 export default function AdminCandidateEdit() {
   const { candidateId } =
     useParams<{
       candidateId: string;
     }>();
-
-  const navigate = useNavigate();
 
   const [candidate, setCandidate] =
     useState<AdminCandidate | null>(null);
@@ -161,11 +153,9 @@ export default function AdminCandidateEdit() {
   const [success, setSuccess] =
     useState("");
 
-  /*
-  |--------------------------------------------------------------------------
-  | Load candidate
-  |--------------------------------------------------------------------------
-  */
+  /* ------------------------------------------------------------------------ */
+  /* Load candidate                                                            */
+  /* ------------------------------------------------------------------------ */
 
   useEffect(() => {
     async function loadCandidate() {
@@ -180,10 +170,6 @@ export default function AdminCandidateEdit() {
           return;
         }
 
-        /*
-         * Use the exact same candidate endpoint
-         * used by the working Candidates page.
-         */
         const [
           candidateList,
           positionList,
@@ -196,10 +182,6 @@ export default function AdminCandidateEdit() {
           ),
         ]);
 
-        /*
-         * Find the candidate using the ID
-         * from the URL.
-         */
         const foundCandidate =
           candidateList.find(
             (item) =>
@@ -207,24 +189,9 @@ export default function AdminCandidateEdit() {
           );
 
         if (!foundCandidate) {
-          console.error(
-            "Candidate was not found.",
-            {
-              candidateId,
-              availableCandidates:
-                candidateList.map(
-                  (item) => ({
-                    id: item.id,
-                    name: item.name,
-                  })
-                ),
-            }
-          );
-
           setError(
             "Candidate not found."
           );
-
           return;
         }
 
@@ -240,9 +207,6 @@ export default function AdminCandidateEdit() {
           countyList
         );
 
-        /*
-         * Populate form.
-         */
         setName(
           foundCandidate.name || ""
         );
@@ -303,11 +267,9 @@ export default function AdminCandidateEdit() {
     loadCandidate();
   }, [candidateId]);
 
-  /*
-  |--------------------------------------------------------------------------
-  | Load constituencies
-  |--------------------------------------------------------------------------
-  */
+  /* ------------------------------------------------------------------------ */
+  /* Load constituencies                                                       */
+  /* ------------------------------------------------------------------------ */
 
   useEffect(() => {
     if (!countyId) {
@@ -340,11 +302,9 @@ export default function AdminCandidateEdit() {
     loadConstituencies();
   }, [countyId]);
 
-  /*
-  |--------------------------------------------------------------------------
-  | Load wards
-  |--------------------------------------------------------------------------
-  */
+  /* ------------------------------------------------------------------------ */
+  /* Load wards                                                               */
+  /* ------------------------------------------------------------------------ */
 
   useEffect(() => {
     if (!constituencyId) {
@@ -377,11 +337,9 @@ export default function AdminCandidateEdit() {
     loadWards();
   }, [constituencyId]);
 
-  /*
-  |--------------------------------------------------------------------------
-  | Position scope
-  |--------------------------------------------------------------------------
-  */
+  /* ------------------------------------------------------------------------ */
+  /* Position scope                                                           */
+  /* ------------------------------------------------------------------------ */
 
   const selectedPosition =
     positions.find(
@@ -404,11 +362,9 @@ export default function AdminCandidateEdit() {
   const requiresWard =
     scope === "WARD";
 
-  /*
-  |--------------------------------------------------------------------------
-  | Position change
-  |--------------------------------------------------------------------------
-  */
+  /* ------------------------------------------------------------------------ */
+  /* Position change                                                          */
+  /* ------------------------------------------------------------------------ */
 
   function handlePositionChange(
     value: string
@@ -444,11 +400,9 @@ export default function AdminCandidateEdit() {
     }
   }
 
-  /*
-  |--------------------------------------------------------------------------
-  | County change
-  |--------------------------------------------------------------------------
-  */
+  /* ------------------------------------------------------------------------ */
+  /* County change                                                            */
+  /* ------------------------------------------------------------------------ */
 
   function handleCountyChange(
     value: string
@@ -458,11 +412,9 @@ export default function AdminCandidateEdit() {
     setWardId("");
   }
 
-  /*
-  |--------------------------------------------------------------------------
-  | Constituency change
-  |--------------------------------------------------------------------------
-  */
+  /* ------------------------------------------------------------------------ */
+  /* Constituency change                                                      */
+  /* ------------------------------------------------------------------------ */
 
   function handleConstituencyChange(
     value: string
@@ -471,11 +423,9 @@ export default function AdminCandidateEdit() {
     setWardId("");
   }
 
-  /*
-  |--------------------------------------------------------------------------
-  | Save
-  |--------------------------------------------------------------------------
-  */
+  /* ------------------------------------------------------------------------ */
+  /* Save                                                                      */
+  /* ------------------------------------------------------------------------ */
 
   async function handleSubmit(
     event: FormEvent
@@ -598,413 +548,859 @@ export default function AdminCandidateEdit() {
     }
   }
 
-  /*
-  |--------------------------------------------------------------------------
-  | Loading
-  |--------------------------------------------------------------------------
-  */
+  /* ------------------------------------------------------------------------ */
+  /* Loading                                                                   */
+  /* ------------------------------------------------------------------------ */
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-slate-50 p-6">
-        <div className="mx-auto max-w-4xl">
-          <div className="rounded-xl bg-white p-8 shadow-sm">
-            Loading candidate...
+      <main className="candidate-edit-page">
+        <div className="candidate-edit-loading">
+          <div className="candidate-edit-loading-avatar" />
+
+          <div className="candidate-edit-loading-content">
+            <div />
+            <div />
+            <div />
           </div>
         </div>
       </main>
     );
   }
 
-  /*
-  |--------------------------------------------------------------------------
-  | Error / not found
-  |--------------------------------------------------------------------------
-  */
+  /* ------------------------------------------------------------------------ */
+  /* Not found                                                                 */
+  /* ------------------------------------------------------------------------ */
 
   if (!candidate) {
     return (
-      <main className="min-h-screen bg-slate-50 p-6">
-        <div className="mx-auto max-w-4xl">
+      <main className="candidate-edit-page">
+        <div className="candidate-edit-shell">
+          <Link
+            to="/admin/candidates"
+            className="candidate-edit-back"
+          >
+            ← Candidates
+          </Link>
 
-          <div className="mb-6">
-            <Link
-              to="/admin/candidates"
-              className="text-sm font-medium text-blue-600 hover:text-blue-700"
-            >
-              ← Back to Candidates
-            </Link>
-          </div>
+          <section className="candidate-edit-not-found">
+            <div className="candidate-edit-not-found-mark">
+              ?
+            </div>
 
-          <div className="rounded-xl border border-red-200 bg-white p-8 shadow-sm">
+            <p className="candidate-edit-eyebrow">
+              Candidate management
+            </p>
 
-            <h1 className="text-xl font-semibold text-slate-900">
+            <h1>
               Candidate not found
             </h1>
 
-            <p className="mt-2 text-sm text-slate-500">
+            <p>
               {error ||
                 "The candidate could not be found."}
             </p>
 
-          </div>
-
+            <Link
+              to="/admin/candidates"
+              className="candidate-edit-primary-button"
+            >
+              Return to candidates
+            </Link>
+          </section>
         </div>
       </main>
     );
   }
 
-  /*
-  |--------------------------------------------------------------------------
-  | Page
-  |--------------------------------------------------------------------------
-  */
+  const initials =
+    name
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((part) =>
+        part.charAt(0).toUpperCase()
+      )
+      .join("") || "?";
+
+  const countyName =
+    counties.find(
+      (item) =>
+        item.id === countyId
+    )?.name;
+
+  const constituencyName =
+    constituencies.find(
+      (item) =>
+        item.id === constituencyId
+    )?.name;
+
+  const wardName =
+    wards.find(
+      (item) =>
+        item.id === wardId
+    )?.name;
+
+  const locationParts = [
+    wardName,
+    constituencyName,
+    countyName,
+  ].filter(Boolean);
 
   return (
-    <main className="min-h-screen bg-slate-50 p-6">
-      <div className="mx-auto max-w-4xl">
+    <main className="candidate-edit-page">
+      <div className="candidate-edit-shell">
 
-        {/* Back */}
+        {/* ---------------------------------------------------------------- */}
+        {/* Top navigation                                                    */}
+        {/* ---------------------------------------------------------------- */}
 
-        <div className="mb-6">
+        <div className="candidate-edit-topbar">
           <Link
             to="/admin/candidates"
-            className="text-sm font-medium text-blue-600 hover:text-blue-700"
+            className="candidate-edit-back"
           >
-            ← Back to Candidates
+            <span>←</span>
+            Candidates
           </Link>
+
+          <div className="candidate-edit-record">
+            <span className="candidate-edit-record-dot" />
+            Editing candidate
+          </div>
         </div>
 
-        {/* Header */}
+        {/* ---------------------------------------------------------------- */}
+        {/* Page heading                                                      */}
+        {/* ---------------------------------------------------------------- */}
 
-        <div className="mb-6">
+        <header className="candidate-edit-header">
+          <div>
+            <p className="candidate-edit-eyebrow">
+              SFD Insights / Candidate management
+            </p>
 
-          <h1 className="text-2xl font-bold text-slate-900">
-            Edit Candidate
-          </h1>
+            <h1>
+              Edit candidate
+            </h1>
 
-          <p className="mt-1 text-sm text-slate-500">
-            Update candidate information,
-            position, location, or status.
-          </p>
+            <p className="candidate-edit-header-copy">
+              Update the candidate profile,
+              electoral position, geographic
+              scope, or public visibility.
+            </p>
+          </div>
 
-        </div>
+          <div
+            className={`candidate-edit-status ${
+              isActive
+                ? "candidate-edit-status--active"
+                : "candidate-edit-status--inactive"
+            }`}
+          >
+            <span />
+            {isActive
+              ? "Active"
+              : "Inactive"}
+          </div>
+        </header>
 
-        {/* Messages */}
+        {/* ---------------------------------------------------------------- */}
+        {/* Notices                                                           */}
+        {/* ---------------------------------------------------------------- */}
 
         {error && (
-          <div className="mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {error}
+          <div
+            className="candidate-edit-notice candidate-edit-notice--error"
+            role="alert"
+          >
+            <span className="candidate-edit-notice-icon">
+              !
+            </span>
+
+            <div>
+              <strong>
+                Unable to save
+              </strong>
+
+              <p>{error}</p>
+            </div>
           </div>
         )}
 
         {success && (
-          <div className="mb-5 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-            {success}
+          <div
+            className="candidate-edit-notice candidate-edit-notice--success"
+            role="status"
+          >
+            <span className="candidate-edit-notice-icon">
+              ✓
+            </span>
+
+            <div>
+              <strong>
+                Changes saved
+              </strong>
+
+              <p>{success}</p>
+            </div>
           </div>
         )}
 
-        {/* Form */}
+        <form
+          onSubmit={handleSubmit}
+          className="candidate-edit-form"
+        >
 
-        <section className="rounded-xl bg-white p-6 shadow-sm">
+          {/* ============================================================= */}
+          {/* Profile overview                                               */}
+          {/* ============================================================= */}
 
-          <form
-            onSubmit={handleSubmit}
-            className="space-y-6"
-          >
+          <section className="candidate-edit-profile">
 
-            {/* Basic information */}
-
-            <div className="grid gap-5 md:grid-cols-2">
-
-              <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">
-                  Candidate Name *
-                </label>
-
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) =>
-                    setName(
-                      e.target.value
-                    )
-                  }
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            <div className="candidate-edit-profile-visual">
+              {photoUrl ? (
+                <img
+                  src={photoUrl}
+                  alt={name}
+                  onError={(event) => {
+                    event.currentTarget.style.display =
+                      "none";
+                  }}
                 />
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">
-                  Party
-                </label>
-
-                <input
-                  type="text"
-                  value={party}
-                  onChange={(e) =>
-                    setParty(
-                      e.target.value
-                    )
-                  }
-                  placeholder="Political party"
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                />
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">
-                  Position *
-                </label>
-
-                <select
-                  value={positionId}
-                  onChange={(e) =>
-                    handlePositionChange(
-                      e.target.value
-                    )
-                  }
-                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                >
-                  <option value="">
-                    Select position
-                  </option>
-
-                  {positions
-                    .filter(
-                      (position) =>
-                        position.isActive
-                    )
-                    .map(
-                      (position) => (
-                        <option
-                          key={
-                            position.id
-                          }
-                          value={
-                            position.id
-                          }
-                        >
-                          {position.name}
-                        </option>
-                      )
-                    )}
-                </select>
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">
-                  Photo URL
-                </label>
-
-                <input
-                  type="url"
-                  value={photoUrl}
-                  onChange={(e) =>
-                    setPhotoUrl(
-                      e.target.value
-                    )
-                  }
-                  placeholder="https://..."
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                />
-              </div>
-
-            </div>
-
-            {/* Geography */}
-
-            <div className="grid gap-5 md:grid-cols-3">
-
-              {/* County */}
-
-              <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">
-                  County
-                  {requiresCounty &&
-                    " *"}
-                </label>
-
-                <select
-                  value={countyId}
-                  disabled={
-                    !requiresCounty
-                  }
-                  onChange={(e) =>
-                    handleCountyChange(
-                      e.target.value
-                    )
-                  }
-                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 disabled:bg-slate-100 disabled:text-slate-400"
-                >
-                  <option value="">
-                    {requiresCounty
-                      ? "Select county"
-                      : "Not required"}
-                  </option>
-
-                  {counties.map(
-                    (county) => (
-                      <option
-                        key={county.id}
-                        value={county.id}
-                      >
-                        {county.name}
-                      </option>
-                    )
-                  )}
-                </select>
-              </div>
-
-              {/* Constituency */}
-
-              <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">
-                  Constituency
-                  {requiresConstituency &&
-                    " *"}
-                </label>
-
-                <select
-                  value={
-                    constituencyId
-                  }
-                  disabled={
-                    !requiresConstituency ||
-                    !countyId
-                  }
-                  onChange={(e) =>
-                    handleConstituencyChange(
-                      e.target.value
-                    )
-                  }
-                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 disabled:bg-slate-100 disabled:text-slate-400"
-                >
-                  <option value="">
-                    {requiresConstituency
-                      ? "Select constituency"
-                      : "Not required"}
-                  </option>
-
-                  {constituencies.map(
-                    (constituency) => (
-                      <option
-                        key={
-                          constituency.id
-                        }
-                        value={
-                          constituency.id
-                        }
-                      >
-                        {
-                          constituency.name
-                        }
-                      </option>
-                    )
-                  )}
-                </select>
-              </div>
-
-              {/* Ward */}
-
-              <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">
-                  Ward
-                  {requiresWard &&
-                    " *"}
-                </label>
-
-                <select
-                  value={wardId}
-                  disabled={
-                    !requiresWard ||
-                    !constituencyId
-                  }
-                  onChange={(e) =>
-                    setWardId(
-                      e.target.value
-                    )
-                  }
-                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 disabled:bg-slate-100 disabled:text-slate-400"
-                >
-                  <option value="">
-                    {requiresWard
-                      ? "Select ward"
-                      : "Not required"}
-                  </option>
-
-                  {wards.map(
-                    (ward) => (
-                      <option
-                        key={ward.id}
-                        value={ward.id}
-                      >
-                        {ward.name}
-                      </option>
-                    )
-                  )}
-                </select>
-              </div>
-
-            </div>
-
-            {/* Description */}
-
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">
-                Description
-              </label>
-
-              <textarea
-                value={description}
-                onChange={(e) =>
-                  setDescription(
-                    e.target.value
-                  )
-                }
-                rows={4}
-                placeholder="Optional candidate description"
-                className="w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-              />
-            </div>
-
-            {/* Status */}
-
-            <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-
-              <label className="flex items-center gap-3">
-
-                <input
-                  type="checkbox"
-                  checked={isActive}
-                  onChange={(e) =>
-                    setIsActive(
-                      e.target.checked
-                    )
-                  }
-                  className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                />
-
-                <span className="text-sm font-medium text-slate-700">
-                  Candidate is active
+              ) : (
+                <span>
+                  {initials}
                 </span>
+              )}
 
-              </label>
+              <div className="candidate-edit-profile-badge">
+                {isActive
+                  ? "LIVE"
+                  : "OFF"}
+              </div>
+            </div>
 
-              <p className="mt-1 ml-7 text-xs text-slate-500">
-                Inactive candidates will not
-                appear in public polls.
+            <div className="candidate-edit-profile-main">
+              <p className="candidate-edit-profile-label">
+                Candidate profile
               </p>
 
+              <h2>
+                {name ||
+                  "Unnamed candidate"}
+              </h2>
+
+              <div className="candidate-edit-profile-meta">
+                <span>
+                  {selectedPosition?.name ||
+                    "No position selected"}
+                </span>
+
+                {party && (
+                  <>
+                    <i />
+                    <span>{party}</span>
+                  </>
+                )}
+              </div>
+
+              {locationParts.length > 0 && (
+                <div className="candidate-edit-location">
+                  <span className="candidate-edit-location-icon">
+                    ⌖
+                  </span>
+
+                  {locationParts.join(
+                    " · "
+                  )}
+                </div>
+              )}
             </div>
 
-            {/* Actions */}
+            <div className="candidate-edit-profile-id">
+              <span>Record</span>
+              <code>
+                {candidate.id.slice(
+                  0,
+                  10
+                )}
+                …
+              </code>
+            </div>
+          </section>
 
-            <div className="flex items-center justify-end gap-3 border-t border-slate-200 pt-5">
+          {/* ============================================================= */}
+          {/* Main editing grid                                              */}
+          {/* ============================================================= */}
 
+          <div className="candidate-edit-grid">
+
+            {/* =========================================================== */}
+            {/* Main column                                                   */}
+            {/* =========================================================== */}
+
+            <div className="candidate-edit-main-column">
+
+              {/* Basic information */}
+
+              <section className="candidate-edit-section">
+                <div className="candidate-edit-section-heading">
+                  <div>
+                    <span className="candidate-edit-section-number">
+                      01
+                    </span>
+
+                    <div>
+                      <h2>
+                        Identity
+                      </h2>
+
+                      <p>
+                        The information displayed
+                        for this candidate.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="candidate-edit-fields">
+
+                  <div className="candidate-edit-field candidate-edit-field--wide">
+                    <label htmlFor="candidate-name">
+                      Candidate name
+                      <span>*</span>
+                    </label>
+
+                    <input
+                      id="candidate-name"
+                      type="text"
+                      value={name}
+                      onChange={(event) =>
+                        setName(
+                          event.target.value
+                        )
+                      }
+                      autoComplete="name"
+                    />
+                  </div>
+
+                  <div className="candidate-edit-field">
+                    <label htmlFor="candidate-party">
+                      Party
+                    </label>
+
+                    <input
+                      id="candidate-party"
+                      type="text"
+                      value={party}
+                      onChange={(event) =>
+                        setParty(
+                          event.target.value
+                        )
+                      }
+                      placeholder="Political party"
+                    />
+                  </div>
+
+                  <div className="candidate-edit-field candidate-edit-field--wide">
+                    <label htmlFor="candidate-photo">
+                      Profile photo URL
+                    </label>
+
+                    <input
+                      id="candidate-photo"
+                      type="url"
+                      value={photoUrl}
+                      onChange={(event) =>
+                        setPhotoUrl(
+                          event.target.value
+                        )
+                      }
+                      placeholder="https://..."
+                    />
+
+                    <span className="candidate-edit-field-help">
+                      Use a direct image URL.
+                      The preview above updates
+                      from this address.
+                    </span>
+                  </div>
+
+                </div>
+              </section>
+
+              {/* Position */}
+
+              <section className="candidate-edit-section">
+                <div className="candidate-edit-section-heading">
+                  <div>
+                    <span className="candidate-edit-section-number">
+                      02
+                    </span>
+
+                    <div>
+                      <h2>
+                        Electoral position
+                      </h2>
+
+                      <p>
+                        Assign the position this
+                        candidate belongs to.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="candidate-edit-position-control">
+
+                  <div className="candidate-edit-field">
+                    <label htmlFor="candidate-position">
+                      Position
+                      <span>*</span>
+                    </label>
+
+                    <select
+                      id="candidate-position"
+                      value={positionId}
+                      onChange={(event) =>
+                        handlePositionChange(
+                          event.target.value
+                        )
+                      }
+                    >
+                      <option value="">
+                        Select position
+                      </option>
+
+                      {positions
+                        .filter(
+                          (position) =>
+                            position.isActive
+                        )
+                        .map(
+                          (position) => (
+                            <option
+                              key={
+                                position.id
+                              }
+                              value={
+                                position.id
+                              }
+                            >
+                              {position.name}
+                            </option>
+                          )
+                        )}
+                    </select>
+                  </div>
+
+                  <div className="candidate-edit-scope-preview">
+                    <span>
+                      Required scope
+                    </span>
+
+                    <strong>
+                      {scope ||
+                        "Not defined"}
+                    </strong>
+
+                    <small>
+                      {scope === "WARD"
+                        ? "County → Constituency → Ward"
+                        : scope ===
+                          "CONSTITUENCY"
+                        ? "County → Constituency"
+                        : scope ===
+                          "COUNTY"
+                        ? "County"
+                        : "No geographic scope"}
+                    </small>
+                  </div>
+
+                </div>
+              </section>
+
+              {/* Geography */}
+
+              <section className="candidate-edit-section">
+                <div className="candidate-edit-section-heading">
+                  <div>
+                    <span className="candidate-edit-section-number">
+                      03
+                    </span>
+
+                    <div>
+                      <h2>
+                        Geographic scope
+                      </h2>
+
+                      <p>
+                        Define where this candidate
+                        belongs.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="candidate-edit-location-chain">
+
+                  <div className="candidate-edit-field">
+                    <label htmlFor="candidate-county">
+                      County
+                      {requiresCounty && (
+                        <span>*</span>
+                      )}
+                    </label>
+
+                    <select
+                      id="candidate-county"
+                      value={countyId}
+                      disabled={
+                        !requiresCounty
+                      }
+                      onChange={(event) =>
+                        handleCountyChange(
+                          event.target.value
+                        )
+                      }
+                    >
+                      <option value="">
+                        {requiresCounty
+                          ? "Select county"
+                          : "Not required"}
+                      </option>
+
+                      {counties.map(
+                        (county) => (
+                          <option
+                            key={
+                              county.id
+                            }
+                            value={
+                              county.id
+                            }
+                          >
+                            {county.name}
+                          </option>
+                        )
+                      )}
+                    </select>
+                  </div>
+
+                  <div className="candidate-edit-chain-arrow">
+                    →
+                  </div>
+
+                  <div className="candidate-edit-field">
+                    <label htmlFor="candidate-constituency">
+                      Constituency
+                      {requiresConstituency && (
+                        <span>*</span>
+                      )}
+                    </label>
+
+                    <select
+                      id="candidate-constituency"
+                      value={
+                        constituencyId
+                      }
+                      disabled={
+                        !requiresConstituency ||
+                        !countyId
+                      }
+                      onChange={(event) =>
+                        handleConstituencyChange(
+                          event.target.value
+                        )
+                      }
+                    >
+                      <option value="">
+                        {requiresConstituency
+                          ? "Select constituency"
+                          : "Not required"}
+                      </option>
+
+                      {constituencies.map(
+                        (
+                          constituency
+                        ) => (
+                          <option
+                            key={
+                              constituency.id
+                            }
+                            value={
+                              constituency.id
+                            }
+                          >
+                            {
+                              constituency.name
+                            }
+                          </option>
+                        )
+                      )}
+                    </select>
+                  </div>
+
+                  <div className="candidate-edit-chain-arrow">
+                    →
+                  </div>
+
+                  <div className="candidate-edit-field">
+                    <label htmlFor="candidate-ward">
+                      Ward
+                      {requiresWard && (
+                        <span>*</span>
+                      )}
+                    </label>
+
+                    <select
+                      id="candidate-ward"
+                      value={wardId}
+                      disabled={
+                        !requiresWard ||
+                        !constituencyId
+                      }
+                      onChange={(event) =>
+                        setWardId(
+                          event.target.value
+                        )
+                      }
+                    >
+                      <option value="">
+                        {requiresWard
+                          ? "Select ward"
+                          : "Not required"}
+                      </option>
+
+                      {wards.map(
+                        (ward) => (
+                          <option
+                            key={ward.id}
+                            value={
+                              ward.id
+                            }
+                          >
+                            {ward.name}
+                          </option>
+                        )
+                      )}
+                    </select>
+                  </div>
+
+                </div>
+
+                {locationParts.length > 0 && (
+                  <div className="candidate-edit-location-summary">
+                    <span>
+                      Current scope
+                    </span>
+
+                    <strong>
+                      {locationParts.join(
+                        " / "
+                      )}
+                    </strong>
+                  </div>
+                )}
+              </section>
+
+              {/* Description */}
+
+              <section className="candidate-edit-section">
+                <div className="candidate-edit-section-heading">
+                  <div>
+                    <span className="candidate-edit-section-number">
+                      04
+                    </span>
+
+                    <div>
+                      <h2>
+                        Description
+                      </h2>
+
+                      <p>
+                        Optional public-facing
+                        candidate information.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="candidate-edit-field">
+                  <label htmlFor="candidate-description">
+                    Candidate description
+                  </label>
+
+                  <textarea
+                    id="candidate-description"
+                    value={description}
+                    onChange={(event) =>
+                      setDescription(
+                        event.target.value
+                      )
+                    }
+                    rows={6}
+                    placeholder="Add a short, factual description..."
+                  />
+
+                  <span className="candidate-edit-field-help">
+                    Keep this factual and concise.
+                    Avoid information that is not
+                    relevant to the candidate profile.
+                  </span>
+                </div>
+              </section>
+
+            </div>
+
+            {/* =========================================================== */}
+            {/* Side column                                                   */}
+            {/* =========================================================== */}
+
+            <aside className="candidate-edit-sidebar">
+
+              {/* Visibility */}
+
+              <section className="candidate-edit-side-section">
+                <p className="candidate-edit-side-label">
+                  Public visibility
+                </p>
+
+                <button
+                  type="button"
+                  className={`candidate-edit-visibility ${
+                    isActive
+                      ? "candidate-edit-visibility--active"
+                      : "candidate-edit-visibility--inactive"
+                  }`}
+                  onClick={() =>
+                    setIsActive(
+                      !isActive
+                    )
+                  }
+                  aria-pressed={
+                    isActive
+                  }
+                >
+                  <span className="candidate-edit-toggle">
+                    <span />
+                  </span>
+
+                  <span>
+                    <strong>
+                      {isActive
+                        ? "Active"
+                        : "Inactive"}
+                    </strong>
+
+                    <small>
+                      {isActive
+                        ? "Visible in eligible public polls"
+                        : "Hidden from public polls"}
+                    </small>
+                  </span>
+                </button>
+
+                <p className="candidate-edit-side-help">
+                  Changing this status does
+                  not remove historical poll
+                  responses.
+                </p>
+              </section>
+
+              {/* Candidate snapshot */}
+
+              <section className="candidate-edit-side-section">
+                <p className="candidate-edit-side-label">
+                  Current assignment
+                </p>
+
+                <div className="candidate-edit-assignment">
+
+                  <div>
+                    <span>
+                      Position
+                    </span>
+
+                    <strong>
+                      {selectedPosition?.name ||
+                        "Not assigned"}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span>
+                      Scope
+                    </span>
+
+                    <strong>
+                      {scope ||
+                        "None"}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span>
+                      Location
+                    </span>
+
+                    <strong>
+                      {locationParts.length
+                        ? locationParts[
+                            locationParts.length -
+                              1
+                          ]
+                        : "Not assigned"}
+                    </strong>
+                  </div>
+
+                </div>
+              </section>
+
+              {/* Important note */}
+
+              <section className="candidate-edit-side-note">
+                <span>i</span>
+
+                <div>
+                  <strong>
+                    Historical responses
+                  </strong>
+
+                  <p>
+                    Editing this record updates
+                    the candidate profile. Existing
+                    poll responses remain associated
+                    with the candidate.
+                  </p>
+                </div>
+              </section>
+
+            </aside>
+
+          </div>
+
+          {/* ============================================================= */}
+          {/* Action bar                                                      */}
+          {/* ============================================================= */}
+
+          <div className="candidate-edit-actions">
+
+            <div>
+              <span className="candidate-edit-actions-indicator" />
+
+              <span>
+                {saving
+                  ? "Saving changes..."
+                  : "Ready to save"}
+              </span>
+            </div>
+
+            <div className="candidate-edit-action-buttons">
               <Link
                 to="/admin/candidates"
-                className="rounded-lg border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                className="candidate-edit-cancel"
               >
                 Cancel
               </Link>
@@ -1012,19 +1408,25 @@ export default function AdminCandidateEdit() {
               <button
                 type="submit"
                 disabled={saving}
-                className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                className="candidate-edit-save"
               >
-                {saving
-                  ? "Saving..."
-                  : "Save Changes"}
+                {saving ? (
+                  <>
+                    <span className="candidate-edit-spinner" />
+                    Saving
+                  </>
+                ) : (
+                  <>
+                    Save changes
+                    <span>→</span>
+                  </>
+                )}
               </button>
-
             </div>
 
-          </form>
+          </div>
 
-        </section>
-
+        </form>
       </div>
     </main>
   );

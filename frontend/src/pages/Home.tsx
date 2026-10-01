@@ -5,7 +5,8 @@ import {
 } from "react";
 
 import {
-  Link,
+  Link,  useNavigate,
+
 } from "react-router-dom";
 
 import {
@@ -21,7 +22,16 @@ import type {
   QuickVoteCandidate,
 } from "../api/public";
 
+import {
+  getFeaturedPolls,
+} from "../api/featuredPolls";
+
 import LocationSelector from "../components/LocationSelector";
+
+import "./Home.css";
+
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
 
 export default function Home() {
   /* ================================================================
@@ -31,8 +41,14 @@ export default function Home() {
   const [positions, setPositions] =
     useState<PublicPosition[]>([]);
 
+      const navigate = useNavigate();
+
+
   const [generalPolls, setGeneralPolls] =
     useState<PublicPoll[]>([]);
+
+  const [featuredPolls, setFeaturedPolls] =
+    useState<any[]>([]);
 
   const [loading, setLoading] =
     useState(true);
@@ -86,6 +102,7 @@ export default function Home() {
   const [voteSubmitted, setVoteSubmitted] =
     useState(false);
 
+    
   /* ================================================================
      LOAD EXISTING HOME DATA
   ================================================================= */
@@ -104,6 +121,22 @@ export default function Home() {
 
         setPositions(data.positions);
         setGeneralPolls(data.generalPolls);
+
+        try {
+          const featured =
+            await getFeaturedPolls();
+
+          if (!cancelled) {
+            setFeaturedPolls(featured);
+          }
+        } catch (featuredError) {
+          console.error(
+            "Failed to load featured polls:",
+            featuredError
+          );
+
+          setFeaturedPolls([]);
+        }
       } catch (error) {
         if (cancelled) {
           return;
@@ -130,8 +163,6 @@ export default function Home() {
 
   /* ================================================================
      LOAD AREA QUICK VOTES
-
-     This functionality already existed and is kept.
   ================================================================= */
 
   useEffect(() => {
@@ -202,9 +233,6 @@ export default function Home() {
 
   /* ================================================================
      QUICK VOTE POSITIONS
-
-     Multiple polls may exist for the same position.
-     We show one quick-vote entry per position.
   ================================================================= */
 
   const quickVotePositions =
@@ -404,10 +432,14 @@ export default function Home() {
 
   if (loading) {
     return (
-      <main>
-        <p>
-          Loading Kenya Opinion Polls...
-        </p>
+      <main className="home-page">
+        <div className="home-loading">
+          <span className="loading-line" />
+
+          <p>
+            Preparing Kenya Opinion Polls...
+          </p>
+        </div>
       </main>
     );
   }
@@ -418,585 +450,748 @@ export default function Home() {
 
   if (error) {
     return (
-      <main>
-        <h1>
-          Kenya Opinion Polls
-        </h1>
+      <main className="home-page">
+        <section className="home-error">
+          <span className="section-kicker">
+            Something went wrong
+          </span>
 
-        <p>
-          {error}
-        </p>
+          <h1>
+            Kenya Opinion Polls
+          </h1>
+
+          <p>
+            {error}
+          </p>
+
+          <button
+            type="button"
+            onClick={() =>
+              window.location.reload()
+            }
+          >
+            Try Again
+          </button>
+        </section>
       </main>
     );
   }
+
+  
 
   /* ================================================================
      PAGE
   ================================================================= */
 
   return (
-    <main>
+
+    <>
+    <Navbar />
+    <main className="home-page">
 
       {/* ============================================================
-          HEADER
+          HERO
       ============================================================= */}
 
-      <header>
-        <h1>
-          Kenya Opinion Polls
-        </h1>
+      <section className="home-hero">
+        <div className="home-shell">
 
-        <p>
-          Explore voluntary online
-          opinion polls and public
-          sentiment across Kenya.
-        </p>
-      </header>
+          <div className="home-hero-grid">
 
-      <hr />
+            <div>
 
-      {/* ============================================================
-          YOUR LOCATION
-      ============================================================= */}
-
-      <section>
-        <h2>
-          Find Polls in Your Area
-        </h2>
-
-        <p>
-          Select your county,
-          constituency and ward to see
-          the opinion polls available
-          in your area.
-        </p>
-
-        <LocationSelector
-          requireCounty={true}
-          requireConstituency={true}
-          requireWard={true}
-          onChange={
-            handleLocationChange
-          }
-        />
-      </section>
-
-      <hr />
-
-      {/* ============================================================
-          POLLS FOR YOUR AREA
-      ============================================================= */}
-
-      <section>
-
-        <h2>
-          Polls for Your Area
-        </h2>
-
-        {!hasCompleteLocation && (
-          <div>
-            <h3>
-              Select your location
-            </h3>
-
-            <p>
-              Choose your county,
-              constituency and ward above
-              to discover the positions
-              and active opinion polls
-              available in your area.
-            </p>
-          </div>
-        )}
-
-        {quickVoteLoading && (
-          <p>
-            Finding available polls
-            for your area...
-          </p>
-        )}
-
-        {quickVoteError && (
-          <p>
-            <strong>
-              {quickVoteError}
-            </strong>
-          </p>
-        )}
-
-        {/* ========================================================
-            AVAILABLE POSITIONS
-        ========================================================= */}
-
-        {hasCompleteLocation &&
-          !quickVoteLoading &&
-          !quickVoteError &&
-          !selectedQuickVote &&
-          quickVotePositions.length > 0 && (
-            <section>
-
-              <p>
-                These are the active
-                opinion polls currently
-                available for your selected
-                area. You can participate in
-                whichever poll you choose.
+              <p className="home-eyebrow">
+                SFD Insights · Kenya Opinion Polls
               </p>
 
-              <div>
-                {quickVotePositions.map(
-                  (vote) => (
-                    <article
-                      key={
-                        vote.position.id
-                      }
-                    >
+              <h1>
+                Your voice.
+                <br />
+                <span>Counted.</span>
+              </h1>
 
-                      <h3>
-                        {
-                          vote.position
-                            .name
-                        }
-                      </h3>
-
-                      <p>
-                        {getPositionScopeLabel(
-                          vote.position
-                            .scope
-                        )}
-                      </p>
-
-                      {vote.position
-                        .description && (
-                        <p>
-                          {
-                            vote.position
-                              .description
-                          }
-                        </p>
-                      )}
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          selectQuickVote(
-                            vote
-                          )
-                        }
-                      >
-                        Vote Now
-                      </button>
-
-                      <Link
-                        to={`/polls/${vote.poll.id}`}
-                      >
-                        View Poll Details
-                      </Link>
-
-                    </article>
-                  )
-                )}
-              </div>
-
-            </section>
-          )}
-
-        {/* ========================================================
-            NO ACTIVE QUICK VOTES
-        ========================================================= */}
-
-        {hasCompleteLocation &&
-          !quickVoteLoading &&
-          !quickVoteError &&
-          !selectedQuickVote &&
-          quickVotePositions.length === 0 && (
-            <section>
-
-              <h3>
-                No active polls for this
-                area
-              </h3>
-
-              <p>
-                There are currently no
-                active opinion polls available
-                for your selected county,
-                constituency and ward.
+              <p className="home-hero-lead">
+                Explore public opinion across Kenya,
+                take part in voluntary polls, and see
+                what people are saying about the issues
+                and positions that matter to them.
               </p>
 
-              <p>
-                You can still explore the
-                available positions and
-                general opinion polls below.
+              <p className="home-hero-note">
+                Simple participation. Independent polling.
+                One response at a time.
               </p>
 
-            </section>
-          )}
+            </div>
 
-        {/* ========================================================
-            SELECTED QUICK VOTE
-        ========================================================= */}
 
-        {selectedQuickVote &&
-          !voteSubmitted && (
-            <section>
+            <aside className="home-hero-action">
 
-              <hr />
-
-              <button
-                type="button"
-                onClick={
-                  changeQuickVotePosition
-                }
-              >
-                ← Back to Positions
-              </button>
+              <p className="home-hero-action-label">
+                Start here
+              </p>
 
               <h2>
-                {
-                  selectedQuickVote
-                    .position.name
-                }
+                Have your say in a few simple steps.
               </h2>
 
               <p>
-                {
-                  selectedQuickVote
-                    .question.question
-                }
+                Choose your area, explore an available
+                poll, and submit your response.
+                No complicated registration process is
+                required for public participation.
               </p>
 
-              <p>
-                Select one option below
-                to participate in this
-                opinion poll.
-              </p>
+              <a
+                href="#find-your-area"
+                className="home-hero-action-link"
+              >
+                Find polls in my area →
+              </a>
 
-              {/* ==================================================
-                  QUICK VOTE CANDIDATES
-              ================================================== */}
+            </aside>
+
+          </div>
+
+        </div>
+      </section>
+
+
+      {/* ============================================================
+          FEATURED POLLS
+      ============================================================= */}
+
+      {featuredPolls.length > 0 && (
+        <section className="featured-area">
+          <div className="home-shell">
+
+            <div className="featured-heading">
 
               <div>
-                {selectedQuickVote.candidates.map(
-                  (candidate) => {
-                    const selected =
-                      selectedCandidate
-                        ?.optionId ===
-                      candidate.optionId;
+                <p className="section-kicker">
+                  Currently highlighted
+                </p>
 
-                    return (
-                      <article
-                        key={
-                          candidate.optionId
-                        }
-                      >
-
-                        {candidate.photoUrl && (
-                          <img
-                            src={
-                              candidate.photoUrl
-                            }
-                            alt={
-                              candidate.name
-                            }
-                            width="120"
-                            height="120"
-                          />
-                        )}
-
-                        <h3>
-                          {
-                            candidate.name
-                          }
-                        </h3>
-
-                        {candidate.party && (
-                          <p>
-                            {
-                              candidate.party
-                            }
-                          </p>
-                        )}
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            selectCandidate(
-                              candidate
-                            )
-                          }
-                        >
-                          {selected
-                            ? "✓ Selected"
-                            : `Vote for ${candidate.name}`}
-                        </button>
-
-                      </article>
-                    );
-                  }
-                )}
+                <h2>
+                  Polls worth your attention.
+                </h2>
               </div>
 
-              {/* ==================================================
-                  CONFIRM VOTE
-              ================================================== */}
+              <p>
+                These polls have been selected as
+                current highlights. Open one to read
+                the question and participate.
+              </p>
 
-              {selectedCandidate && (
-                <section>
+            </div>
 
-                  <hr />
+
+            <div className="featured-list">
+
+              {featuredPolls.map((poll, index) => (
+                <article
+                  className="featured-item"
+                  key={poll.id}
+                >
+
+                  <span className="featured-number">
+                    0{index + 1}
+                  </span>
 
                   <h3>
-                    Confirm Your Vote
+                    {poll.title}
                   </h3>
 
-                  <p>
-                    You are selecting:
-                  </p>
-
-                  <h2>
-                    {
-                      selectedCandidate
-                        .name
-                    }
-                  </h2>
-
-                  {selectedCandidate.party && (
-                    <p>
-                      {
-                        selectedCandidate
-                          .party
-                      }
+                  {poll.description && (
+                    <p className="featured-description">
+                      {poll.description}
                     </p>
                   )}
 
-                  <button
-                    type="button"
-                    disabled={
-                      submittingVote
-                    }
-                    onClick={
-                      submitQuickVote
-                    }
+                  <div className="featured-meta">
+
+                    {poll.position && (
+                      <span>
+                        {poll.position.name}
+                      </span>
+                    )}
+
+                    {poll.campaign && (
+                      <span>
+                        {poll.campaign.name}
+                      </span>
+                    )}
+
+                    {(poll.targetCounty ||
+                      poll.targetConstituency ||
+                      poll.targetWard) && (
+                      <span>
+                        {[
+                          poll.targetWard?.name,
+                          poll.targetConstituency?.name,
+                          poll.targetCounty?.name,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </span>
+                    )}
+
+                  </div>
+
+                  <Link
+                    className="text-action"
+                    to={`/polls/${poll.id}`}
                   >
-                    {submittingVote
-                      ? "Submitting..."
-                      : "✓ Confirm Vote"}
-                  </button>
+                    Read and participate
+                  </Link>
 
-                  <button
-                    type="button"
-                    disabled={
-                      submittingVote
-                    }
-                    onClick={
-                      changeCandidate
-                    }
-                  >
-                    Change Candidate
-                  </button>
+                </article>
+              ))}
 
-                </section>
-              )}
+            </div>
 
-            </section>
-          )}
+          </div>
+        </section>
+      )}
 
-        {/* ========================================================
-            VOTE SUCCESS
-        ========================================================= */}
 
-        {voteSubmitted &&
-          selectedQuickVote &&
-          selectedCandidate && (
-            <section>
+      {/* ============================================================
+          FIND YOUR AREA
+      ============================================================= */}
 
-              <hr />
+      <section
+        id="find-your-area"
+        className="home-section location-section"
+      >
+
+        <div className="home-shell">
+
+          <div className="location-layout">
+
+            <div className="location-copy">
+
+              <p className="section-kicker">
+                Find your area
+              </p>
 
               <h2>
-                ✓ Response Recorded
+                Start with
+                <br />
+                where you live.
               </h2>
 
               <p>
-                Your response for the
-                following opinion poll has
-                been recorded:
+                Select your
+                <strong> county</strong>,
+                <strong> constituency</strong>,
+                and <strong> ward</strong>.
               </p>
-
-              <h3>
-                {
-                  selectedQuickVote
-                    .position.name
-                }
-              </h3>
 
               <p>
-                Selected:
+                We use your selection to show the
+                active polls available for your area.
+                This keeps the experience relevant
+                without making you search through
+                unrelated polls.
               </p>
 
-              <h2>
-                {
-                  selectedCandidate.name
+            </div>
+
+
+            <div className="location-form">
+
+              <LocationSelector
+                requireCounty={true}
+                requireConstituency={true}
+                requireWard={true}
+                onChange={
+                  handleLocationChange
                 }
-              </h2>
+              />
 
-              {selectedCandidate.party && (
-                <p>
-                  {
-                    selectedCandidate
-                      .party
-                  }
-                </p>
-              )}
+            </div>
 
-              <p>
-                Thank you for participating
-                in this voluntary opinion
-                poll.
-              </p>
+          </div>
 
-              <div>
-
-                <button
-                  type="button"
-                  onClick={
-                    continueVoting
-                  }
-                >
-                  Continue Voting
-                </button>
-
-                <Link
-                  to={`/polls/${selectedQuickVote.poll.id}`}
-                >
-                  View Poll Details
-                </Link>
-
-              </div>
-
-            </section>
-          )}
+        </div>
 
       </section>
 
-      <hr />
 
       {/* ============================================================
-          POLITICAL OPINION POLLS
-
-          NEW FUNCTIONALITY:
-
-          Every position can now display the candidates already
-          stored for that position.
-
-          Candidate cards are horizontally scrollable.
-
-          Clicking ANY candidate card takes the participant to
-          the same position-polls page as "View X Polls".
+          AREA POLLS / QUICK VOTE
       ============================================================= */}
 
-      <section>
+      <section className="home-section quick-vote-section">
 
-        <h2>
-          Political Opinion Polls
-        </h2>
+        <div className="home-shell">
 
-        <p>
-          Explore available polls by
-          position and view the candidates
-          participating in each poll.
-        </p>
+          <div className="section-intro">
 
-        <div>
+            <div>
+              <p className="section-kicker">
+                Participate
+              </p>
 
-          {positions.map(
-            (position) => {
+              <h2>
+                Polls for your area.
+              </h2>
+            </div>
+
+            <p>
+              Once you select your location, the
+              active polls available there will appear
+              here. Choose a position and make your
+              response.
+            </p>
+
+          </div>
+
+
+          {!hasCompleteLocation && (
+            <div className="quick-vote-empty">
+
+              <h3>
+                Your local polls are waiting.
+              </h3>
+
+              <p>
+                Select your county, constituency and
+                ward above. Your available polls will
+                appear here automatically.
+              </p>
+
+            </div>
+          )}
+
+
+          {quickVoteLoading && (
+            <div className="quick-vote-empty">
+
+              <h3>
+                Finding your local polls…
+              </h3>
+
+              <p>
+                We are checking the active polls
+                available for your selected area.
+              </p>
+
+            </div>
+          )}
+
+
+          {quickVoteError && (
+            <div className="quick-vote-empty">
+
+              <h3>
+                We could not load the local polls.
+              </h3>
+
+              <p>
+                {quickVoteError}
+              </p>
+
+            </div>
+          )}
+
+
+          {/* ========================================================
+              AVAILABLE POSITIONS
+          ========================================================= */}
+
+          {hasCompleteLocation &&
+            !quickVoteLoading &&
+            !quickVoteError &&
+            !selectedQuickVote &&
+            quickVotePositions.length > 0 && (
+
+              <div className="quick-position-list">
+
+                {quickVotePositions.map((vote) => (
+
+                  <article
+                    className="quick-position"
+                    key={vote.position.id}
+                  >
+
+                    <p className="quick-position-scope">
+                      {getPositionScopeLabel(
+                        vote.position.scope
+                      )}
+                    </p>
+
+                    <h3>
+                      {vote.position.name}
+                    </h3>
+
+                    {vote.position.description && (
+                      <p>
+                        {vote.position.description}
+                      </p>
+                    )}
+
+                    <div>
+
+                     <button
+  type="button"
+  className="quick-vote-button"
+  onClick={() =>
+    navigate(
+      `/polls/${vote.poll.id}/participate`
+    )
+  }
+>
+  Vote now
+</button>
+
+                      <Link
+                        className="quick-position-link"
+                        to={`/polls/${vote.poll.id}`}
+                      >
+                        Read poll details
+                      </Link>
+
+                    </div>
+
+                  </article>
+
+                ))}
+
+              </div>
+            )}
+
+
+          {/* ========================================================
+              NO ACTIVE POLLS
+          ========================================================= */}
+
+          {hasCompleteLocation &&
+            !quickVoteLoading &&
+            !quickVoteError &&
+            !selectedQuickVote &&
+            quickVotePositions.length === 0 && (
+
+              <div className="quick-vote-empty">
+
+                <h3>
+                  No active polls for this area yet.
+                </h3>
+
+                <p>
+                  There are currently no active polls
+                  matching your selected county,
+                  constituency and ward. You can still
+                  explore the national and general
+                  opinion polls further below.
+                </p>
+
+              </div>
+            )}
+
+
+          {/* ========================================================
+              SELECTED QUICK VOTE
+          ========================================================= */}
+
+          {selectedQuickVote &&
+            !voteSubmitted && (
+
+              <div className="vote-panel">
+
+                <button
+                  type="button"
+                  className="vote-back"
+                  onClick={
+                    changeQuickVotePosition
+                  }
+                >
+                  ← Back to positions
+                </button>
+
+                <p className="section-kicker">
+                  {selectedQuickVote.position.name}
+                </p>
+
+                <h2 className="vote-question">
+                  {
+                    selectedQuickVote
+                      .question.question
+                  }
+                </h2>
+
+                <p className="vote-instruction">
+                  Select one option below to
+                  participate in this opinion poll.
+                </p>
+
+
+                <div className="vote-candidates">
+
+                  {selectedQuickVote.candidates.map(
+                    (candidate) => {
+
+                      const selected =
+                        selectedCandidate
+                          ?.optionId ===
+                        candidate.optionId;
+
+                      return (
+                        <article
+                          className="vote-candidate"
+                          key={candidate.optionId}
+                        >
+
+                          {candidate.photoUrl && (
+                            <img
+                              src={candidate.photoUrl}
+                              alt={candidate.name}
+                              width="92"
+                              height="92"
+                            />
+                          )}
+
+                          <h3>
+                            {candidate.name}
+                          </h3>
+
+                          {candidate.party && (
+                            <p>
+                              {candidate.party}
+                            </p>
+                          )}
+
+                          <button
+                            type="button"
+                            className={
+                              selected
+                                ? "vote-select-button selected"
+                                : "vote-select-button"
+                            }
+                            onClick={() =>
+                              selectCandidate(
+                                candidate
+                              )
+                            }
+                          >
+                            {selected
+                              ? "✓ Selected"
+                              : `Choose ${candidate.name}`}
+                          </button>
+
+                        </article>
+                      );
+                    }
+                  )}
+
+                </div>
+
+
+                {selectedCandidate && (
+                  <div className="vote-confirm">
+
+                    <h3>
+                      Confirm your response
+                    </h3>
+
+                    <p>
+                      You selected:
+                    </p>
+
+                    <h2 className="vote-confirm-name">
+                      {selectedCandidate.name}
+                    </h2>
+
+                    {selectedCandidate.party && (
+                      <p>
+                        {selectedCandidate.party}
+                      </p>
+                    )}
+
+                    <div className="vote-confirm-actions">
+
+                      <button
+                        type="button"
+                        className="primary-button"
+                        disabled={
+                          submittingVote
+                        }
+                        onClick={
+                          submitQuickVote
+                        }
+                      >
+                        {submittingVote
+                          ? "Submitting…"
+                          : "Confirm response"}
+                      </button>
+
+                      <button
+                        type="button"
+                        className="secondary-button"
+                        disabled={
+                          submittingVote
+                        }
+                        onClick={
+                          changeCandidate
+                        }
+                      >
+                        Change selection
+                      </button>
+
+                    </div>
+
+                  </div>
+                )}
+
+              </div>
+            )}
+
+
+          {/* ========================================================
+              SUCCESS
+          ========================================================= */}
+
+          {voteSubmitted &&
+            selectedQuickVote &&
+            selectedCandidate && (
+
+              <div className="vote-panel">
+
+                <p className="section-kicker">
+                  Response recorded
+                </p>
+
+                <h2>
+                  Thank you for participating.
+                </h2>
+
+                <p>
+                  Your response for the
+                  <strong>
+                    {" "}
+                    {selectedQuickVote.position.name}
+                  </strong>{" "}
+                  opinion poll has been recorded.
+                </p>
+
+                <h3>
+                  Selected:
+                  {" "}
+                  {selectedCandidate.name}
+                </h3>
+
+                {selectedCandidate.party && (
+                  <p>
+                    {selectedCandidate.party}
+                  </p>
+                )}
+
+                <div className="vote-confirm-actions">
+
+                  <button
+                    type="button"
+                    className="primary-button"
+                    onClick={
+                      continueVoting
+                    }
+                  >
+                    Continue voting
+                  </button>
+
+                  <Link
+                    className="secondary-button"
+                    to={`/polls/${selectedQuickVote.poll.id}`}
+                  >
+                    View poll details
+                  </Link>
+
+                </div>
+
+              </div>
+            )}
+
+        </div>
+
+      </section>
+
+
+      {/* ============================================================
+          POLITICAL OPINION
+      ============================================================= */}
+
+      <section className="home-section political-section">
+
+        <div className="home-shell">
+
+          <div className="section-intro">
+
+            <div>
+              <p className="section-kicker">
+                Explore by position
+              </p>
+
+              <h2>
+                Political opinion.
+              </h2>
+            </div>
+
+            <p>
+              Browse the positions represented on the
+              platform and explore the candidates and
+              active polls associated with each one.
+            </p>
+
+          </div>
+
+
+          <div className="position-list">
+
+            {positions.map((position) => {
 
               const candidates =
                 position.candidates ?? [];
 
               return (
                 <article
+                  className="position-row"
                   key={position.id}
                 >
 
-                  {/* ==================================================
-                      POSITION HEADER
-                  ================================================== */}
+                  <div className="position-info">
 
-                  <h3>
-                    {position.name}
-                  </h3>
+                    <h3>
+                      {position.name}
+                    </h3>
 
-                  <p>
-                    {getPositionScopeLabel(
-                      position.scope
+                    <p className="position-scope">
+                      {getPositionScopeLabel(
+                        position.scope
+                      )}
+                    </p>
+
+                    {position.description && (
+                      <p className="position-description">
+                        {position.description}
+                      </p>
                     )}
-                  </p>
 
-                  {position.description && (
-                    <p>
-                      {
-                        position.description
-                      }
-                    </p>
-                  )}
+                  </div>
 
-                  {position.pollCount !==
-                    undefined && (
-                    <p>
-                      {
-                        position.pollCount
-                      }{" "}
-                      active poll
-                      {position.pollCount ===
-                      1
-                        ? ""
-                        : "s"}
-                    </p>
-                  )}
 
-                  {/* ==================================================
-                      CANDIDATE SCROLLING AREA
+                  <div>
 
-                      Horizontal scrolling is intentionally done
-                      here without changing the existing page
-                      styling system.
+                    {candidates.length > 0 ? (
 
-                      We can style this properly later.
-                  ================================================== */}
+                      <div className="candidate-strip">
 
-                  {candidates.length > 0 && (
-                    <div
-                      style={{
-                        display: "flex",
-                        overflowX: "auto",
-                        gap: "16px",
-                        padding:
-                          "10px 0",
-                      }}
-                    >
+                        {candidates.map(
+                          (candidate) => (
 
-                      {candidates.map(
-                        (candidate) => (
-                          <Link
-                            key={
-                              candidate.id
-                            }
-                            to={`/polls/position/${position.id}`}
-                            style={{
-                              flex:
-                                "0 0 auto",
-                              textDecoration:
-                                "none",
-                            }}
-                          >
-
-                            <article>
-
-                              {/* ====================================
-                                  CANDIDATE IMAGE
-                              ==================================== */}
+                            <Link
+                              key={candidate.id}
+                              className="candidate-person"
+                              to={`/polls/position/${position.id}`}
+                            >
 
                               {candidate.photoUrl ? (
                                 <img
@@ -1006,179 +1201,191 @@ export default function Home() {
                                   alt={
                                     candidate.name
                                   }
-                                  width="160"
-                                  height="160"
+                                  width="92"
+                                  height="92"
                                   loading="lazy"
                                 />
                               ) : (
-                                <div
-                                  style={{
-                                    width:
-                                      "160px",
-                                    height:
-                                      "160px",
-                                    display:
-                                      "flex",
-                                    alignItems:
-                                      "center",
-                                    justifyContent:
-                                      "center",
-                                  }}
-                                >
+                                <div className="candidate-placeholder">
                                   No image
                                 </div>
                               )}
 
-                              {/* ====================================
-                                  CANDIDATE NAME
-                              ==================================== */}
-
                               <h4>
-                                {
-                                  candidate.name
-                                }
+                                {candidate.name}
                               </h4>
-
-                              {/* ====================================
-                                  PARTY
-                              ==================================== */}
 
                               {candidate.party && (
                                 <p>
-                                  {
-                                    candidate.party
-                                  }
+                                  {candidate.party}
                                 </p>
                               )}
 
-                            </article>
+                            </Link>
 
-                          </Link>
-                        )
-                      )}
+                          )
+                        )}
 
-                    </div>
-                  )}
+                      </div>
 
-                  {/* ==================================================
-                      VIEW ALL POLLS
+                    ) : (
 
-                      This is the SAME destination used by the
-                      candidate cards above.
-                  ================================================== */}
+                      <p className="position-description">
+                        Candidate information is not
+                        currently available for this
+                        position.
+                      </p>
 
-                  <Link
-                    to={`/polls/position/${position.id}`}
-                  >
-                    View{" "}
-                    {position.name} Polls
-                  </Link>
+                    )}
+
+                  </div>
+
+
+                  <div className="position-action">
+
+                    <Link
+                      to={`/polls/position/${position.id}`}
+                    >
+                      View polls →
+                    </Link>
+
+                  </div>
 
                 </article>
               );
-            }
-          )}
+            })}
+
+          </div>
 
         </div>
 
       </section>
 
-      <hr />
 
       {/* ============================================================
-          GENERAL & PUBLIC OPINION
-
-          KEPT
+          GENERAL OPINION
       ============================================================= */}
 
-      <section>
+      <section className="home-section">
 
-        <h2>
-          General & Public Opinion
-        </h2>
+        <div className="home-shell">
 
-        <p>
-          Explore non-position-specific
-          public opinion and research
-          polls.
-        </p>
+          <div className="general-layout">
 
-        <Link to="/polls/general">
-          Explore General Polls
-        </Link>
+            <div className="general-main">
 
-        {generalPolls.length > 0 && (
-          <div>
+              <p className="section-kicker">
+                Beyond political positions
+              </p>
 
-            <h3>
-              Currently active
-            </h3>
+              <h2>
+                General & public opinion.
+              </h2>
 
-            {generalPolls
-              .slice(0, 3)
-              .map((poll) => (
-                <article
-                  key={poll.id}
-                >
+              <p>
+                Not every question is about a political
+                position. Explore public-service,
+                research, community and other
+                non-position-specific opinion polls.
+              </p>
 
-                  <h4>
-                    {poll.title}
-                  </h4>
+              <Link
+                className="general-link"
+                to="/polls/general"
+              >
+                Explore all general polls →
+              </Link>
 
-                  <p>
-                    {poll._count
-                      ?.responses ?? 0}{" "}
-                    responses
-                  </p>
 
-                  <Link
-                    to={`/polls/${poll.id}`}
-                  >
-                    View Poll
-                  </Link>
+              {generalPolls.length > 0 && (
 
-                </article>
-              ))}
+                <div className="general-list">
+
+                  {generalPolls
+                    .slice(0, 3)
+                    .map((poll) => (
+
+                      <article
+                        className="general-item"
+                        key={poll.id}
+                      >
+
+                        <div>
+
+                          <h4>
+                            {poll.title}
+                          </h4>
+
+                          <p>
+                            Active public opinion poll
+                          </p>
+
+                        </div>
+
+                        <Link
+                          to={`/polls/${poll.id}`}
+                        >
+                          Open poll →
+                        </Link>
+
+                      </article>
+
+                    ))}
+
+                </div>
+              )}
+
+            </div>
+
+
+            <aside className="trust-panel">
+
+              <h2>
+                What this platform is.
+              </h2>
+
+              <p>
+                SFD Insights provides a simple,
+                independent space for voluntary online
+                opinion polling.
+              </p>
+
+              <ul className="trust-points">
+
+                <li>
+                  Participation is voluntary.
+                </li>
+
+                <li>
+                  An online response is not an official
+                  election vote.
+                </li>
+
+                <li>
+                  Online responses may not represent
+                  the entire population.
+                </li>
+
+                <li>
+                  Poll results should be understood
+                  within their methodology and context.
+                </li>
+
+              </ul>
+
+            </aside>
 
           </div>
-        )}
 
-      </section>
-
-      <hr />
-
-      {/* ============================================================
-          IMPORTANT INFORMATION
-
-          KEPT
-      ============================================================= */}
-
-      <section>
-
-        <h2>
-          Important Information
-        </h2>
-
-        <p>
-          This is an independent
-          platform for voluntary online
-          opinion polling.
-        </p>
-
-        <p>
-          Participation here does not
-          cast an official election
-          vote.
-        </p>
-
-        <p>
-          Online responses may not
-          represent the views of the
-          entire population.
-        </p>
+        </div>
 
       </section>
 
     </main>
+
+     <Footer />
+
+      </>
+
   );
 }

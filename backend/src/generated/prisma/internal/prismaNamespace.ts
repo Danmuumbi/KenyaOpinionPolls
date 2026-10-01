@@ -1453,6 +1453,8 @@ export const PollScalarFieldEnum = {
   endsAt: 'endsAt',
   allowResults: 'allowResults',
   isPublic: 'isPublic',
+  isFeatured: 'isFeatured',
+  featuredOrder: 'featuredOrder',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const

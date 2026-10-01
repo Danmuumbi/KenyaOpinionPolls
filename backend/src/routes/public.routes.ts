@@ -70,6 +70,8 @@ function getCookie(
 
 /**
  * Create the anonymous participant cookie.
+ * 
+ * 
  */
 function setParticipantCookie(
   res: {
@@ -429,17 +431,9 @@ router.get(
           },
         });
 
-      /**
-       * Get general polls.
-       *
-       * General polls do not belong to
-       * a political position.
-       */
 const generalPolls =
   await prisma.poll.findMany({
     where: {
-      ...activePollFilter,
-
       positionId: null,
 
       OR: [
@@ -479,7 +473,6 @@ const generalPolls =
       createdAt: "desc",
     },
   });
-
       /**
        * Format positions for the frontend.
        */
@@ -927,7 +920,35 @@ router.post(
         });
       }
 
-      const poll = await prisma.poll.findFirst({
+      console.log("[PUBLIC POLL DEBUG]", {
+  pollId: req.params.pollId,
+  now: new Date().toISOString(),
+});
+
+const rawPoll =
+  await prisma.poll.findUnique({
+    where: {
+      id: req.params.pollId,
+    },
+    select: {
+      id: true,
+      title: true,
+      status: true,
+      isPublic: true,
+      startsAt: true,
+      endsAt: true,
+      positionId: true,
+      type: true,
+    },
+  });
+
+console.log("[PUBLIC POLL RAW]", rawPoll);
+
+
+
+
+const poll =
+  await prisma.poll.findFirst({
         where: {
           id: pollId,
           ...activePollWhere(),
@@ -1091,10 +1112,29 @@ router.post(
  *
  * GET /api/public/polls/:pollId
  */
-router.get(
-  "/polls/:pollId",
-  async (req, res) => {
-    try {
+router.get("/polls/:pollId", async (req, res) => {
+  console.log("🔥 PUBLIC POLL ROUTE HIT:", req.params.pollId);
+
+  const debugPoll = await prisma.poll.findUnique({
+  where: {
+    id: req.params.pollId,
+  },
+  select: {
+    id: true,
+    title: true,
+    status: true,
+    isPublic: true,
+    startsAt: true,
+    endsAt: true,
+    positionId: true,
+    type: true,
+  },
+});
+
+console.log("🔥 PUBLIC POLL DATABASE VALUES:", debugPoll);
+console.log("🔥 CURRENT SERVER TIME:", new Date().toISOString());
+
+  try {
       const now = new Date();
 
       const poll =

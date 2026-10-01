@@ -23,6 +23,11 @@ import AdminCandidateEdit from "./pages/AdminCandidateEdit";
 import AdminStatistics from "./pages/AdminStatistics";
 import ProtectedRoute from "./components/ProtectedRoute";
 
+import FeaturedPolls from "./pages/FeaturedPolls";
+import About from "./pages/About";
+import Services from "./pages/Services";
+import EditPoll from "./pages/EditPoll";
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -121,6 +126,19 @@ export default function App() {
           <Route
   path="/admin/statistics"
   element={<AdminStatistics />}
+/>
+
+<Route path="/about" element={<About />} />
+<Route path="/services" element={<Services />} />
+
+<Route
+  path="/admin/polls/:pollId/edit"
+  element={<EditPoll />}
+/>
+
+<Route
+  path="/admin/featured-polls"
+  element={<FeaturedPolls />}
 />
 
           <Route

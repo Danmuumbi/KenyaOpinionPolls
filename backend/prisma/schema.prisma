@@ -181,13 +181,16 @@ model Poll {
   targetConstituency   Constituency? @relation("PollTargetConstituency", fields: [targetConstituencyId], references: [id], onDelete: SetNull)
 
   targetWardId String?
-  targetWard   Ward?   @relation("PollTargetWard", fields: [targetWardId], references: [id], onDelete: SetNull)
+  targetWard   Ward? @relation("PollTargetWard", fields: [targetWardId], references: [id], onDelete: SetNull)
 
   startsAt DateTime?
   endsAt   DateTime?
 
   allowResults Boolean @default(true)
   isPublic     Boolean @default(true)
+
+  isFeatured    Boolean @default(false)
+  featuredOrder Int?
 
   questions PollQuestion[]
   responses Response[]
@@ -203,6 +206,7 @@ model Poll {
   @@index([targetConstituencyId])
   @@index([targetWardId])
   @@index([createdAt])
+  @@index([isFeatured, featuredOrder])
 }
 
 model PollQuestion {

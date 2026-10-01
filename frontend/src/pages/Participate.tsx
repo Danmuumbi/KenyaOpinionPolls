@@ -1,4 +1,3 @@
-
 import {
   useEffect,
   useState,
@@ -20,22 +19,21 @@ import type {
   PublicPollDetails,
 } from "../api/public";
 
-export default function Participate() {
-  const { pollId } =
-    useParams();
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
 
-  const navigate =
-    useNavigate();
+import "./Participate.css";
+
+export default function Participate() {
+  const { pollId } = useParams();
+
+  const navigate = useNavigate();
 
   const [poll, setPoll] =
-    useState<PublicPollDetails | null>(
-      null
-    );
+    useState<PublicPollDetails | null>(null);
 
   const [answers, setAnswers] =
-    useState<
-      Record<string, string>
-    >({});
+    useState<Record<string, string>>({});
 
   const [loading, setLoading] =
     useState(true);
@@ -47,14 +45,10 @@ export default function Participate() {
     useState(false);
 
   const [otherSelected, setOtherSelected] =
-    useState<
-      Record<string, boolean>
-    >({});
+    useState<Record<string, boolean>>({});
 
   const [otherCandidateNames, setOtherCandidateNames] =
-    useState<
-      Record<string, string>
-    >({});
+    useState<Record<string, string>>({});
 
   const [error, setError] =
     useState("");
@@ -63,15 +57,11 @@ export default function Participate() {
     async function load() {
       try {
         if (!pollId) {
-          throw new Error(
-            "Poll ID is missing"
-          );
+          throw new Error("Poll ID is missing");
         }
 
         const data =
-          await getPublicPoll(
-            pollId
-          );
+          await getPublicPoll(pollId);
 
         setPoll(data);
       } catch (error) {
@@ -94,14 +84,15 @@ export default function Participate() {
   ) {
     setAnswers((current) => ({
       ...current,
-      [questionId]:
-        optionId,
+      [questionId]: optionId,
     }));
 
     setOtherSelected((current) => ({
       ...current,
       [questionId]: false,
     }));
+
+    setError("");
   }
 
   function handleOtherSelected(
@@ -121,6 +112,8 @@ export default function Participate() {
 
       return updated;
     });
+
+    setError("");
   }
 
   function handleOtherNameChange(
@@ -173,10 +166,6 @@ export default function Participate() {
           name
         );
 
-      /*
-       * Add the newly created option
-       * into the poll currently displayed.
-       */
       setPoll((current) => {
         if (!current) {
           return current;
@@ -194,10 +183,6 @@ export default function Participate() {
                   return question;
                 }
 
-                /*
-                 * Prevent duplicate display
-                 * if the option is already there.
-                 */
                 const alreadyExists =
                   question.options.some(
                     (option) =>
@@ -221,10 +206,6 @@ export default function Participate() {
         };
       });
 
-      /*
-       * Select the newly created
-       * candidate option.
-       */
       setAnswers((current) => ({
         ...current,
         [questionId]:
@@ -264,10 +245,6 @@ export default function Participate() {
 
     setError("");
 
-    /*
-     * Make sure all required questions
-     * have been answered.
-     */
     const missingRequired =
       poll.questions.some(
         (question) =>
@@ -280,17 +257,27 @@ export default function Participate() {
         "Please answer all required questions."
       );
 
+      const firstMissing =
+        poll.questions.find(
+          (question) =>
+            question.isRequired &&
+            !answers[question.id]
+        );
+
+      if (firstMissing) {
+        document
+          .getElementById(
+            `question-${firstMissing.id}`
+          )
+          ?.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
+      }
+
       return;
     }
 
-    /*
-     * The participant has already
-     * selected this specific poll.
-     *
-     * Therefore we use the poll's own
-     * target geography instead of asking
-     * the participant to select it again.
-     */
     const formattedAnswers =
       Object.entries(answers).map(
         ([questionId, optionId]) => ({
@@ -336,29 +323,79 @@ export default function Participate() {
     }
   }
 
+  const answeredCount =
+    poll?.questions.filter(
+      (question) =>
+        Boolean(answers[question.id]) ||
+        otherSelected[question.id]
+    ).length ?? 0;
+
+  const totalQuestions =
+    poll?.questions.length ?? 0;
+
+  const progress =
+    totalQuestions > 0
+      ? Math.round(
+          (answeredCount /
+            totalQuestions) *
+            100
+        )
+      : 0;
+
   if (loading) {
     return (
-      <main>
-        <p>
-          Loading participation form...
-        </p>
-      </main>
+      <>
+        <Navbar />
+
+        <main className="participate-page">
+          <div className="participate-loading">
+            <div className="participate-spinner" />
+
+            <p>
+              Loading participation form...
+            </p>
+          </div>
+        </main>
+
+        <Footer />
+      </>
     );
   }
 
   if (error && !poll) {
     return (
-      <main>
-        <h1>
-          Poll unavailable
-        </h1>
+      <>
+        <Navbar />
 
-        <p>{error}</p>
+        <main className="participate-page">
+          <section className="participate-error">
+            <span className="participate-error-icon">
+              !
+            </span>
 
-        <Link to="/">
-          Back home
-        </Link>
-      </main>
+            <p className="participate-eyebrow">
+              POLL UNAVAILABLE
+            </p>
+
+            <h1>
+              This poll could not be loaded
+            </h1>
+
+            <p>
+              {error}
+            </p>
+
+            <Link
+              to="/polls"
+              className="participate-primary-link"
+            >
+              Back to polls
+            </Link>
+          </section>
+        </main>
+
+        <Footer />
+      </>
     );
   }
 
@@ -367,267 +404,501 @@ export default function Participate() {
   }
 
   return (
-    <main>
-      <Link
-        to={`/polls/${poll.id}`}
-      >
-        ← Back to poll
-      </Link>
+    <>
+      <Navbar />
 
-      <header>
-        <h1>
-          {poll.title}
-        </h1>
+      <main className="participate-page">
+        <div className="participate-shell">
 
-        <p>
-          Your response is anonymous.
-        </p>
-      </header>
+          <Link
+            to={`/polls/${poll.id}`}
+            className="participate-back"
+          >
+            <span aria-hidden="true">
+              ←
+            </span>
+            Back to poll
+          </Link>
 
-      <hr />
+          <header className="participate-header">
+            <div className="participate-header-top">
+              <span className="participate-label">
+                PARTICIPATION FORM
+              </span>
 
-      {/* POLL LOCATION */}
+              <span className="participate-anonymous">
+                <span aria-hidden="true">
+                  ✓
+                </span>
+                Anonymous response
+              </span>
+            </div>
 
-      {poll.position &&
-        poll.position.scope !==
-          "NATIONAL" && (
-          <section>
-            <h2>
-              Poll location
-            </h2>
+            <h1>
+              {poll.title}
+            </h1>
 
-            {poll.targetCounty && (
-              <p>
-                County:{" "}
-                <strong>
-                  {
-                    poll.targetCounty
-                      .name
-                  }
-                </strong>
+            {poll.description && (
+              <p className="participate-description">
+                {poll.description}
               </p>
             )}
+          </header>
 
-            {poll.targetConstituency && (
-              <p>
-                Constituency:{" "}
+          <section className="participate-context">
+            <div className="context-item">
+              <span className="context-label">
+                POLL AREA
+              </span>
+
+              <strong>
+                {poll.position?.scope ===
+                "NATIONAL"
+                  ? "National"
+                  : [
+                      poll.targetWard?.name,
+                      poll.targetConstituency?.name,
+                      poll.targetCounty?.name,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ") ||
+                    "Specified location"}
+              </strong>
+            </div>
+
+            {poll.position && (
+              <div className="context-item">
+                <span className="context-label">
+                  POSITION
+                </span>
+
                 <strong>
-                  {
-                    poll
-                      .targetConstituency
-                      .name
-                  }
+                  {poll.position.name}
                 </strong>
-              </p>
+              </div>
             )}
 
-            {poll.targetWard && (
-              <p>
-                Ward:{" "}
+            <div className="context-progress">
+              <div className="progress-heading">
+                <span>
+                  Your progress
+                </span>
+
                 <strong>
-                  {
-                    poll
-                      .targetWard
-                      .name
-                  }
+                  {answeredCount}/{totalQuestions}
                 </strong>
-              </p>
-            )}
-          </section>
-        )}
+              </div>
 
-      <hr />
-
-      <form
-        onSubmit={handleSubmit}
-      >
-        <section>
-          <h2>
-            Your response
-          </h2>
-
-          {poll.questions.map(
-            (
-              question,
-              questionIndex
-            ) => (
-              <article
-                key={question.id}
+              <div
+                className="progress-track"
+                aria-label={`${progress}% complete`}
               >
-                <h3>
-                  {questionIndex + 1}.{" "}
-                  {question.question}
-                </h3>
-
-                {question.description && (
-                  <p>
-                    {
-                      question.description
-                    }
-                  </p>
-                )}
-
-                {question.options.map(
-                  (option) => (
-                    <label
-                      key={option.id}
-                      style={{
-                        display:
-                          "block",
-                      }}
-                    >
-                      <input
-                        type="radio"
-                        name={
-                          question.id
-                        }
-                        value={
-                          option.id
-                        }
-                        checked={
-                          answers[
-                            question.id
-                          ] ===
-                          option.id
-                        }
-                        onChange={() =>
-                          handleAnswer(
-                            question.id,
-                            option.id
-                          )
-                        }
-                      />
-
-                      {" "}
-
-                      {option.candidate
-                        ?.name ||
-                        option.label}
-
-                      {option.candidate
-                        ?.party &&
-                        ` (${option.candidate.party})`}
-                    </label>
-                  )
-                )}
-
-                {/* OTHER CANDIDATE */}
-
-                <label
+                <span
                   style={{
-                    display:
-                      "block",
-                    marginTop:
-                      "12px",
+                    width: `${progress}%`,
                   }}
-                >
-                  <input
-                    type="radio"
-                    name={
-                      question.id
-                    }
-                    checked={
-                      otherSelected[
-                        question.id
-                      ] === true
-                    }
-                    onChange={() =>
-                      handleOtherSelected(
-                        question.id
-                      )
-                    }
-                  />
+                />
+              </div>
+            </div>
+          </section>
 
-                  {" "}
+          <div className="participate-layout">
 
-                  Other candidate / My candidate
-                  isn't listed
-                </label>
+            <aside className="participate-sidebar">
+              <div className="sidebar-panel">
+                <span className="sidebar-number">
+                  {String(answeredCount).padStart(
+                    2,
+                    "0"
+                  )}
+                </span>
 
-                {otherSelected[
-                  question.id
-                ] && (
-                  <div
-                    style={{
-                      marginTop:
-                        "10px",
-                      marginLeft:
-                        "24px",
-                    }}
+                <span className="sidebar-divider">
+                  /
+                </span>
+
+                <span className="sidebar-total">
+                  {String(totalQuestions).padStart(
+                    2,
+                    "0"
+                  )}
+                </span>
+
+                <p>
+                  questions answered
+                </p>
+              </div>
+
+              <div className="sidebar-note">
+                <span className="sidebar-note-icon">
+                  i
+                </span>
+
+                <p>
+                  Choose the option that
+                  best represents your
+                  response. Required
+                  questions are marked with
+                  an asterisk.
+                </p>
+              </div>
+            </aside>
+
+            <form
+              className="participate-form"
+              onSubmit={handleSubmit}
+            >
+              <div className="form-heading">
+                <div>
+                  <span className="form-kicker">
+                    YOUR RESPONSE
+                  </span>
+
+                  <h2>
+                    Select your answers
+                  </h2>
+                </div>
+
+                <span className="form-count">
+                  {answeredCount} answered
+                </span>
+              </div>
+
+              {poll.questions.map(
+                (
+                  question,
+                  questionIndex
+                ) => (
+                  <section
+                    key={question.id}
+                    id={`question-${question.id}`}
+                    className="question-section"
                   >
-                    <input
-                      type="text"
-                      value={
-                        otherCandidateNames[
-                          question.id
-                        ] || ""
-                      }
-                      onChange={(event) =>
-                        handleOtherNameChange(
-                          question.id,
-                          event.target.value
-                        )
-                      }
-                      placeholder="Enter candidate name"
-                      maxLength={150}
-                    />
+                    <div className="question-number">
+                      {String(
+                        questionIndex + 1
+                      ).padStart(2, "0")}
+                    </div>
 
-                    <button
-                      type="button"
-                      onClick={() =>
-                        addCandidateForQuestion(
+                    <div className="question-content">
+                      <div className="question-heading">
+                        <h3>
+                          {question.question}
+
+                          {question.isRequired && (
+                            <span
+                              className="required-mark"
+                              aria-label="required"
+                            >
+                              *
+                            </span>
+                          )}
+                        </h3>
+
+                        {question.description && (
+                          <p>
+                            {
+                              question.description
+                            }
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="answer-list">
+                        {question.options.map(
+                          (option) => {
+                            const selected =
+                              answers[
+                                question.id
+                              ] ===
+                              option.id;
+
+                            return (
+                              <label
+                                key={
+                                  option.id
+                                }
+                                className={`answer-option ${
+                                  selected
+                                    ? "selected"
+                                    : ""
+                                }`}
+                              >
+                                <input
+                                  type="radio"
+                                  name={
+                                    question.id
+                                  }
+                                  value={
+                                    option.id
+                                  }
+                                  checked={
+                                    selected
+                                  }
+                                  onChange={() =>
+                                    handleAnswer(
+                                      question.id,
+                                      option.id
+                                    )
+                                  }
+                                />
+
+                                <span className="custom-radio">
+                                  <span />
+                                </span>
+
+                                {option.candidate
+                                  ?.photoUrl ? (
+                                  <img
+                                    src={
+                                      option
+                                        .candidate
+                                        .photoUrl
+                                    }
+                                    alt=""
+                                    className="candidate-photo"
+                                  />
+                                ) : (
+                                  <span className="candidate-placeholder">
+                                    {(
+                                      option
+                                        .candidate
+                                        ?.name ||
+                                      option.label ||
+                                      "?"
+                                    )
+                                      .charAt(0)
+                                      .toUpperCase()}
+                                  </span>
+                                )}
+
+                                <span className="answer-details">
+                                  <strong>
+                                    {option
+                                      .candidate
+                                      ?.name ||
+                                      option.label}
+                                  </strong>
+
+                                  {option
+                                    .candidate
+                                    ?.party && (
+                                    <small>
+                                      {
+                                        option
+                                          .candidate
+                                          .party
+                                      }
+                                    </small>
+                                  )}
+                                </span>
+
+                                <span className="answer-check">
+                                  ✓
+                                </span>
+                              </label>
+                            );
+                          }
+                        )}
+
+                        <label
+                          className={`answer-option other-option ${
+                            otherSelected[
+                              question.id
+                            ]
+                              ? "selected"
+                              : ""
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name={
+                              question.id
+                            }
+                            checked={
+                              otherSelected[
+                                question.id
+                              ] === true
+                            }
+                            onChange={() =>
+                              handleOtherSelected(
+                                question.id
+                              )
+                            }
+                          />
+
+                          <span className="custom-radio">
+                            <span />
+                          </span>
+
+                          <span className="other-icon">
+                            +
+                          </span>
+
+                          <span className="answer-details">
+                            <strong>
+                              Other candidate
+                            </strong>
+
+                            <small>
+                              My candidate isn't
+                              listed
+                            </small>
+                          </span>
+
+                          <span className="answer-check">
+                            ✓
+                          </span>
+                        </label>
+
+                        {otherSelected[
                           question.id
-                        )
-                      }
-                      disabled={
-                        addingCandidate
-                      }
-                      style={{
-                        marginLeft:
-                          "8px",
-                      }}
-                    >
-                      {addingCandidate
-                        ? "Adding..."
-                        : "Add Candidate"}
-                    </button>
+                        ] && (
+                          <div className="other-candidate-box">
+                            <div>
+                              <label
+                                htmlFor={`other-${question.id}`}
+                              >
+                                Candidate name
+                              </label>
+
+                              <p>
+                                Add the candidate
+                                you want to include
+                                in this poll.
+                              </p>
+                            </div>
+
+                            <div className="other-candidate-controls">
+                              <input
+                                id={`other-${question.id}`}
+                                type="text"
+                                value={
+                                  otherCandidateNames[
+                                    question.id
+                                  ] || ""
+                                }
+                                onChange={(
+                                  event
+                                ) =>
+                                  handleOtherNameChange(
+                                    question.id,
+                                    event.target
+                                      .value
+                                  )
+                                }
+                                placeholder="Enter candidate name"
+                                maxLength={150}
+                              />
+
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  addCandidateForQuestion(
+                                    question.id
+                                  )
+                                }
+                                disabled={
+                                  addingCandidate
+                                }
+                              >
+                                {addingCandidate
+                                  ? "Adding..."
+                                  : "Add candidate"}
+                              </button>
+                            </div>
+
+                            <span className="other-help">
+                              Once added, the
+                              candidate becomes
+                              available as an option
+                              for this poll.
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </section>
+                )
+              )}
+
+              {error && (
+                <div
+                  className="form-error"
+                  role="alert"
+                >
+                  <span>
+                    !
+                  </span>
+
+                  <div>
+                    <strong>
+                      Please check your response
+                    </strong>
 
                     <p>
-                      The candidate will be
-                      added to this poll and
-                      will be available for
-                      other participants.
+                      {error}
                     </p>
                   </div>
-                )}
-              </article>
-            )
-          )}
-        </section>
+                </div>
+              )}
 
-        {error && (
-          <p>
-            <strong>
-              Error:
-            </strong>{" "}
-            {error}
-          </p>
-        )}
+              <section className="submit-section">
+                <div className="submit-copy">
+                  <span className="submit-icon">
+                    ✓
+                  </span>
 
-        <br />
+                  <div>
+                    <h2>
+                      Ready to submit?
+                    </h2>
 
-        <button
-          type="submit"
-          disabled={
-            submitting ||
-            addingCandidate
-          }
-        >
-          {submitting
-            ? "Submitting..."
-            : "Submit Response"}
-        </button>
-      </form>
-    </main>
+                    <p>
+                      Review your selections
+                      before sending your
+                      response.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  className="submit-button"
+                  disabled={
+                    submitting ||
+                    addingCandidate
+                  }
+                >
+                  <span>
+                    {submitting
+                      ? "Submitting response..."
+                      : "Submit my response"}
+                  </span>
+
+                  {!submitting && (
+                    <span
+                      aria-hidden="true"
+                    >
+                      →
+                    </span>
+                  )}
+                </button>
+              </section>
+
+              <p className="form-disclaimer">
+                Your response is anonymous.
+                Results are presented as
+                percentages and represent
+                responses collected through
+                this platform.
+              </p>
+            </form>
+          </div>
+        </div>
+      </main>
+
+      <Footer />
+    </>
   );
 }

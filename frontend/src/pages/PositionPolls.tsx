@@ -20,6 +20,11 @@ import type {
 
 import LocationSelector from "../components/LocationSelector";
 
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
+
+import "./PositionPolls.css";
+
 type LocationState = {
   countyId: string;
   constituencyId: string;
@@ -35,16 +40,6 @@ export default function PositionPolls() {
   const [polls, setPolls] =
     useState<PublicPoll[]>([]);
 
-  /*
-   * IMPORTANT:
-   *
-   * Do not automatically use the previously saved
-   * location here.
-   *
-   * The Position Polls page should initially show
-   * all available polls and allow the location selector
-   * to act as a filter.
-   */
   const [location, setLocation] =
     useState<LocationState>({
       countyId: "",
@@ -70,9 +65,6 @@ export default function PositionPolls() {
         setLoading(true);
         setError("");
 
-        /*
-         * First get the position so we know its scope.
-         */
         const positions =
           await getPublicPositions();
 
@@ -98,30 +90,6 @@ export default function PositionPolls() {
 
         setPosition(selectedPosition);
 
-        /*
-         * Build the filters.
-         *
-         * Empty values are deliberately converted
-         * to undefined.
-         *
-         * This means:
-         *
-         * No location selected
-         *      ↓
-         * get ALL polls for this position
-         *
-         * County selected
-         *      ↓
-         * filter by county
-         *
-         * Constituency selected
-         *      ↓
-         * filter by constituency
-         *
-         * Ward selected
-         *      ↓
-         * filter by ward
-         */
         const filters = {
           countyId:
             location.countyId ||
@@ -179,38 +147,98 @@ export default function PositionPolls() {
   function handleLocationChange(
     nextLocation: LocationState
   ) {
-    /*
-     * LocationSelector is now purely a filter.
-     *
-     * As soon as the user changes the location,
-     * the effect above reloads the polls.
-     */
     setLocation(nextLocation);
   }
 
-  if (loading) {
+  const requiresCounty =
+    position?.scope === "COUNTY" ||
+    position?.scope === "CONSTITUENCY" ||
+    position?.scope === "WARD";
+
+  const requiresConstituency =
+    position?.scope === "CONSTITUENCY" ||
+    position?.scope === "WARD";
+
+  const requiresWard =
+    position?.scope === "WARD";
+
+  const hasLocationFilter =
+    Boolean(
+      location.countyId ||
+      location.constituencyId ||
+      location.wardId
+    );
+
+  function getPollLocation(
+    poll: PublicPoll
+  ) {
+    const parts = [
+      poll.targetWard?.name,
+      poll.targetConstituency?.name,
+      poll.targetCounty?.name,
+    ].filter(Boolean);
+
+    if (parts.length === 0) {
+      return "National";
+    }
+
+    return parts.join(" · ");
+  }
+
+  if (loading && !position) {
     return (
-      <main>
-        <p>
-          Loading polls...
-        </p>
-      </main>
+      <>
+        <Navbar />
+
+        <main className="position-page">
+          <div className="position-loading">
+            <div className="position-spinner" />
+
+            <p>
+              Loading polls...
+            </p>
+          </div>
+        </main>
+
+        <Footer />
+      </>
     );
   }
 
-  if (error) {
+  if (error && !position) {
     return (
-      <main>
-        <Link to="/">
-          ← Home
-        </Link>
+      <>
+        <Navbar />
 
-        <h1>
-          Polls unavailable
-        </h1>
+        <main className="position-page">
+          <section className="position-error">
+            <span className="position-error-icon">
+              !
+            </span>
 
-        <p>{error}</p>
-      </main>
+            <span className="position-eyebrow">
+              POLLS UNAVAILABLE
+            </span>
+
+            <h1>
+              We couldn't load this position
+            </h1>
+
+            <p>
+              {error}
+            </p>
+
+            <Link
+              to="/polls"
+              className="position-primary-link"
+            >
+              Back to polls
+            </Link>
+          </section>
+        </main>
+
+        <Footer />
+      </>
     );
   }
 
@@ -218,149 +246,299 @@ export default function PositionPolls() {
     return null;
   }
 
-  const requiresCounty =
-    position.scope === "COUNTY" ||
-    position.scope === "CONSTITUENCY" ||
-    position.scope === "WARD";
-
-  const requiresConstituency =
-    position.scope === "CONSTITUENCY" ||
-    position.scope === "WARD";
-
-  const requiresWard =
-    position.scope === "WARD";
-
   return (
-    <main>
-      <Link to="/">
-        ← Home
-      </Link>
+    <>
+      <Navbar />
 
-      <header>
-        <h1>
-          {position.name} Opinion Polls
-        </h1>
+      <main className="position-page">
+        <div className="position-shell">
 
-        <p>
-          Who would you support if we
-          were to vote today?
-        </p>
-      </header>
+          <Link
+            to="/"
+            className="position-back"
+          >
+            <span aria-hidden="true">
+              ←
+            </span>
 
-      {requiresCounty && (
-        <>
-          <hr />
+            Home
+          </Link>
 
-          <LocationSelector
-            requireCounty={
-              requiresCounty
-            }
+          <header className="position-header">
+            <div className="position-header-label">
+              <span className="position-dot" />
 
-            requireConstituency={
-              requiresConstituency
-            }
+              PUBLIC OPINION
+            </div>
 
-            requireWard={
-              requiresWard
-            }
+            <h1>
+              {position.name}
+              <span>
+                Opinion Polls
+              </span>
+            </h1>
 
-            onChange={
-              handleLocationChange
-            }
-          />
-        </>
-      )}
+            <p>
+              Explore active polls for this
+              position and share your response
+              where you are eligible to
+              participate.
+            </p>
+          </header>
 
-      <hr />
-
-      <section>
-        <h2>
-          Available Polls
-        </h2>
-
-        {polls.length === 0 ? (
-          <p>
-            No active{" "}
-            {position.name} polls are
-            currently available for
-            the selected area.
-          </p>
-        ) : (
-          <div>
-            {polls.map((poll) => (
-              <article
-                key={poll.id}
-              >
-                <h3>
-                  {poll.title}
-                </h3>
-
-                {poll.description && (
-                  <p>
-                    {poll.description}
-                  </p>
-                )}
-
-                {poll.targetCounty && (
-                  <p>
-                    Target:{" "}
-                    {
-                      poll
-                        .targetCounty
-                        .name
-                    }
-                    {" County"}
-                  </p>
-                )}
-
-                {poll.targetConstituency && (
-                  <p>
-                    Target:{" "}
-                    {
-                      poll
-                        .targetConstituency
-                        .name
-                    }
-                  </p>
-                )}
-
-                {poll.targetWard && (
-                  <p>
-                    Target:{" "}
-                    {
-                      poll
-                        .targetWard
-                        .name
-                    }
-                  </p>
-                )}
-
-                <p>
-                  Responses:{" "}
-                  {poll._count
-                    ?.responses ?? 0}
-                </p>
-
+          {requiresCounty && (
+            <section className="location-panel">
+              <div className="location-panel-heading">
                 <div>
-                  <Link
-                    to={`/polls/${poll.id}/participate`}
-                  >
-                    Participate in this Poll
-                  </Link>
+                  <span className="section-kicker">
+                    FIND YOUR AREA
+                  </span>
 
-                  {" "}
-
-                  <Link
-                    to={`/polls/${poll.id}`}
-                  >
-                    View Statistics
-                  </Link>
+                  <h2>
+                    Choose a location
+                  </h2>
                 </div>
-              </article>
-            ))}
-          </div>
-        )}
-      </section>
-    </main>
+
+                <span className="location-step">
+                  Filter
+                </span>
+              </div>
+
+              <p className="location-description">
+                Start with your county and
+                narrow down to your constituency
+                or ward where applicable.
+              </p>
+
+              <LocationSelector
+                requireCounty={
+                  requiresCounty
+                }
+                requireConstituency={
+                  requiresConstituency
+                }
+                requireWard={
+                  requiresWard
+                }
+                onChange={
+                  handleLocationChange
+                }
+              />
+
+              {hasLocationFilter && (
+                <button
+                  type="button"
+                  className="clear-location"
+                  onClick={() =>
+                    handleLocationChange({
+                      countyId: "",
+                      constituencyId: "",
+                      wardId: "",
+                    })
+                  }
+                >
+                  Clear location filter
+                </button>
+              )}
+            </section>
+          )}
+
+          <section className="polls-section">
+            <div className="polls-heading">
+              <div>
+                <span className="section-kicker">
+                  AVAILABLE POLLS
+                </span>
+
+                <h2>
+                  {hasLocationFilter
+                    ? "Polls for this area"
+                    : `Active ${position.name} polls`}
+                </h2>
+              </div>
+
+              {loading && (
+                <span className="polls-loading-label">
+                  Updating...
+                </span>
+              )}
+            </div>
+
+            {!loading &&
+              polls.length === 0 && (
+                <div className="empty-polls">
+                  <div className="empty-polls-mark">
+                    —
+                  </div>
+
+                  <h3>
+                    No active polls found
+                  </h3>
+
+                  <p>
+                    There are currently no active{" "}
+                    {position.name.toLowerCase()}{" "}
+                    polls
+                    {hasLocationFilter
+                      ? " for the selected area."
+                      : "."}
+                  </p>
+
+                  {hasLocationFilter && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleLocationChange({
+                          countyId: "",
+                          constituencyId: "",
+                          wardId: "",
+                        })
+                      }
+                      className="empty-clear-button"
+                    >
+                      View all polls
+                    </button>
+                  )}
+                </div>
+              )}
+
+            {polls.length > 0 && (
+              <div className="poll-list">
+                {polls.map(
+                  (
+                    poll,
+                    index
+                  ) => (
+                    <article
+                      key={poll.id}
+                      className="poll-item"
+                    >
+                      <div className="poll-index">
+                        {String(
+                          index + 1
+                        ).padStart(2, "0")}
+                      </div>
+
+                      <div className="poll-main">
+                        <div className="poll-meta">
+                          <span>
+                            ACTIVE POLL
+                          </span>
+
+                          <span className="meta-separator">
+                            •
+                          </span>
+
+                          <span>
+                            {getPollLocation(
+                              poll
+                            )}
+                          </span>
+                        </div>
+
+                        <h3>
+                          {poll.title}
+                        </h3>
+
+                        {poll.description && (
+                          <p className="poll-description">
+                            {poll.description}
+                          </p>
+                        )}
+
+                        <div className="poll-target">
+                          {poll.targetCounty && (
+                            <span>
+                              <strong>
+                                County
+                              </strong>
+
+                              {
+                                poll
+                                  .targetCounty
+                                  .name
+                              }
+                            </span>
+                          )}
+
+                          {poll.targetConstituency && (
+                            <span>
+                              <strong>
+                                Constituency
+                              </strong>
+
+                              {
+                                poll
+                                  .targetConstituency
+                                  .name
+                              }
+                            </span>
+                          )}
+
+                          {poll.targetWard && (
+                            <span>
+                              <strong>
+                                Ward
+                              </strong>
+
+                              {
+                                poll
+                                  .targetWard
+                                  .name
+                              }
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="poll-actions">
+                        <Link
+                          to={`/polls/${poll.id}`}
+                          className="statistics-link"
+                        >
+                          View results
+                        </Link>
+
+                        <Link
+                          to={`/polls/${poll.id}/participate`}
+                          className="participate-link"
+                        >
+                          Participate
+                          <span aria-hidden="true">
+                            →
+                          </span>
+                        </Link>
+                      </div>
+                    </article>
+                  )
+                )}
+              </div>
+            )}
+          </section>
+
+          <section className="position-information">
+            <div className="information-line" />
+
+            <div className="information-content">
+              <span className="information-label">
+                ABOUT THESE POLLS
+              </span>
+
+              <p>
+                These are voluntary online
+                opinion polls. Results reflect
+                responses submitted through SFD
+                Insights and should not be
+                interpreted as official election
+                results.
+              </p>
+            </div>
+          </section>
+
+        </div>
+      </main>
+
+      <Footer />
+    </>
   );
 }

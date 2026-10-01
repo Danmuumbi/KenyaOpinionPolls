@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useMemo,
   useState,
 } from "react";
 
@@ -16,6 +17,11 @@ import type {
   AdminPoll,
 } from "../api/admin";
 
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
+
+import "./AdminPolls.css";
+
 export default function AdminPolls() {
   const [polls, setPolls] =
     useState<AdminPoll[]>([]);
@@ -30,6 +36,11 @@ export default function AdminPolls() {
     changingStatus,
     setChangingStatus,
   ] = useState("");
+
+  const [
+    filter,
+    setFilter,
+  ] = useState("ALL");
 
   async function loadPolls() {
     try {
@@ -94,239 +105,629 @@ export default function AdminPolls() {
     }
   }
 
+  const filteredPolls =
+    useMemo(() => {
+      if (filter === "ALL") {
+        return polls;
+      }
+
+      return polls.filter(
+        (poll) =>
+          poll.status === filter
+      );
+    }, [polls, filter]);
+
+  const counts = {
+    all: polls.length,
+
+    active: polls.filter(
+      (poll) =>
+        poll.status === "ACTIVE"
+    ).length,
+
+    draft: polls.filter(
+      (poll) =>
+        poll.status === "DRAFT"
+    ).length,
+
+    paused: polls.filter(
+      (poll) =>
+        poll.status === "PAUSED"
+    ).length,
+
+    closed: polls.filter(
+      (poll) =>
+        poll.status === "CLOSED"
+    ).length,
+  };
+
   if (loading) {
     return (
-      <main>
+      <div className="admin-polls-loading">
+        <div className="admin-polls-loading__line" />
+
         <p>
           Loading polls...
         </p>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main>
-      <Link to="/dashboard">
-        ← Dashboard
-      </Link>
+    <div className="admin-polls-page">
 
-      <h1>
-        Poll Management
-      </h1>
+      <Navbar />
 
-      <p>
-        Create, publish and manage
-        public opinion polls.
-      </p>
+      <main className="admin-polls-main">
 
-      <p>
-        <Link to="/admin/polls/create">
-          + Create New Poll
-        </Link>
-      </p>
+        {/* ==================================================
+            PAGE HEADER
+        ================================================== */}
 
-      {error && (
-        <p>
-          <strong>Error:</strong>{" "}
-          {error}
-        </p>
-      )}
+        <section className="admin-polls-header">
 
-      {polls.length ===
-      0 ? (
-        <section>
-          <h2>
-            No polls yet
-          </h2>
+          <div className="admin-polls-header__top">
 
-          <p>
-            Create your first poll
-            to make it available
-            to the public.
-          </p>
+            <Link
+              to="/dashboard"
+              className="admin-polls-back"
+            >
+              ← Dashboard
+            </Link>
 
-          <Link to="/admin/polls/create">
-            Create Poll
-          </Link>
+            <span className="admin-polls-header__label">
+              SFD INSIGHTS / POLL MANAGEMENT
+            </span>
+
+          </div>
+
+
+          <div className="admin-polls-header__main">
+
+            <div>
+              <h1>
+                Poll Management
+              </h1>
+
+              <p>
+                Create, publish and manage
+                public opinion polls.
+              </p>
+            </div>
+
+
+            <Link
+              to="/admin/polls/create"
+              className="admin-polls-create"
+            >
+              <span>
+                +
+              </span>
+
+              Create New Poll
+            </Link>
+
+          </div>
+
         </section>
-      ) : (
-        <section>
-          {polls.map(
-            (poll) => (
-              <article
-                key={poll.id}
-                style={{
-                  border:
-                    "1px solid #ddd",
-                  padding:
-                    "20px",
-                  marginBottom:
-                    "20px",
-                }}
-              >
-                <h2>
-                  {poll.title}
-                </h2>
 
-                {poll.description && (
-                  <p>
-                    {
-                      poll.description
-                    }
-                  </p>
-                )}
 
-                <p>
-                  <strong>
-                    Position:
-                  </strong>{" "}
-                  {poll.position
-                    ?.name ||
-                    "General"}
-                </p>
+        {/* ==================================================
+            ERROR
+        ================================================== */}
 
-                <p>
-                  <strong>
-                    Status:
-                  </strong>{" "}
-                  {poll.status}
-                </p>
+        {error && (
+          <div className="admin-polls-error">
 
-                <p>
-                  <strong>
-                    Questions:
-                  </strong>{" "}
-                  {
-                    poll
-                      .questions
-                      .length
+            <strong>
+              Error
+            </strong>
+
+            <span>
+              {error}
+            </span>
+
+            <button
+              type="button"
+              onClick={() =>
+                setError("")
+              }
+            >
+              Dismiss
+            </button>
+
+          </div>
+        )}
+
+
+        {/* ==================================================
+            SUMMARY
+        ================================================== */}
+
+        <section className="admin-polls-summary">
+
+          <div className="admin-polls-summary__item admin-polls-summary__item--active">
+            <span>
+              TOTAL
+            </span>
+
+            <strong>
+              {counts.all}
+            </strong>
+          </div>
+
+
+          <div className="admin-polls-summary__item">
+            <span>
+              ACTIVE
+            </span>
+
+            <strong>
+              {counts.active}
+            </strong>
+          </div>
+
+
+          <div className="admin-polls-summary__item">
+            <span>
+              DRAFTS
+            </span>
+
+            <strong>
+              {counts.draft}
+            </strong>
+          </div>
+
+
+          <div className="admin-polls-summary__item">
+            <span>
+              PAUSED
+            </span>
+
+            <strong>
+              {counts.paused}
+            </strong>
+          </div>
+
+
+          <div className="admin-polls-summary__item">
+            <span>
+              CLOSED
+            </span>
+
+            <strong>
+              {counts.closed}
+            </strong>
+          </div>
+
+        </section>
+
+
+        {/* ==================================================
+            FILTERS
+        ================================================== */}
+
+        <section className="admin-polls-toolbar">
+
+          <div>
+            <span className="admin-polls-toolbar__label">
+              SHOWING
+            </span>
+
+            <strong>
+              {filteredPolls.length}{" "}
+              {filteredPolls.length === 1
+                ? "poll"
+                : "polls"}
+            </strong>
+          </div>
+
+
+          <div className="admin-polls-filters">
+
+            {[
+              ["ALL", "All polls"],
+              ["ACTIVE", "Active"],
+              ["DRAFT", "Drafts"],
+              ["PAUSED", "Paused"],
+              ["CLOSED", "Closed"],
+            ].map(
+              ([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  className={
+                    filter === value
+                      ? "admin-polls-filter admin-polls-filter--active"
+                      : "admin-polls-filter"
                   }
-                </p>
-
-                <p>
-                  <strong>
-                    Responses:
-                  </strong>{" "}
-                  {
-                    poll._count
-                      ?.responses ||
-                    0
+                  onClick={() =>
+                    setFilter(value)
                   }
-                </p>
-
-                <p>
-                  <strong>
-                    Public:
-                  </strong>{" "}
-                  {poll.isPublic
-                    ? "Yes"
-                    : "No"}
-                </p>
-
-                <Link
-                  to={`/admin/polls/${poll.id}`}
                 >
-                  Manage
-                </Link>
+                  {label}
+                </button>
+              )
+            )}
 
-                {" "}
+          </div>
 
-                {poll.status ===
-                  "DRAFT" && (
-                  <button
-                    disabled={
-                      changingStatus ===
-                      poll.id
-                    }
-                    onClick={() =>
-                      changeStatus(
-                        poll.id,
-                        "ACTIVE"
-                      )
-                    }
-                  >
-                    Publish
-                  </button>
-                )}
-
-                {poll.status ===
-                  "ACTIVE" && (
-                  <button
-                    disabled={
-                      changingStatus ===
-                      poll.id
-                    }
-                    onClick={() =>
-                      changeStatus(
-                        poll.id,
-                        "PAUSED"
-                      )
-                    }
-                  >
-                    Pause
-                  </button>
-                )}
-
-                {poll.status ===
-                  "PAUSED" && (
-                  <button
-                    disabled={
-                      changingStatus ===
-                      poll.id
-                    }
-                    onClick={() =>
-                      changeStatus(
-                        poll.id,
-                        "ACTIVE"
-                      )
-                    }
-                  >
-                    Resume
-                  </button>
-                )}
-
-                {(poll.status ===
-                  "ACTIVE" ||
-                  poll.status ===
-                    "PAUSED") && (
-                  <button
-                    disabled={
-                      changingStatus ===
-                      poll.id
-                    }
-                    onClick={() =>
-                      changeStatus(
-                        poll.id,
-                        "CLOSED"
-                      )
-                    }
-                  >
-                    Close
-                  </button>
-                )}
-
-                {poll.status ===
-                  "CLOSED" && (
-                  <button
-                    disabled={
-                      changingStatus ===
-                      poll.id
-                    }
-                    onClick={() =>
-                      changeStatus(
-                        poll.id,
-                        "ARCHIVED"
-                      )
-                    }
-                  >
-                    Archive
-                  </button>
-                )}
-              </article>
-            )
-          )}
         </section>
-      )}
-    </main>
+
+
+        {/* ==================================================
+            POLLS
+        ================================================== */}
+
+        {polls.length === 0 ? (
+
+          <section className="admin-polls-empty">
+
+            <span>
+              NO POLLS
+            </span>
+
+            <h2>
+              No polls yet
+            </h2>
+
+            <p>
+              Create your first poll to
+              make it available to the public.
+            </p>
+
+            <Link
+              to="/admin/polls/create"
+              className="admin-polls-empty__button"
+            >
+              Create Poll
+              <span>→</span>
+            </Link>
+
+          </section>
+
+        ) : filteredPolls.length === 0 ? (
+
+          <section className="admin-polls-empty">
+
+            <span>
+              NO MATCHES
+            </span>
+
+            <h2>
+              No polls in this category
+            </h2>
+
+            <p>
+              There are currently no polls
+              matching the selected status.
+            </p>
+
+            <button
+              type="button"
+              className="admin-polls-empty__button"
+              onClick={() =>
+                setFilter("ALL")
+              }
+            >
+              Show All Polls
+              <span>→</span>
+            </button>
+
+          </section>
+
+        ) : (
+
+          <section className="admin-polls-list">
+
+            <div className="admin-polls-list__heading">
+
+              <span>
+                POLL
+              </span>
+
+              <span>
+                DETAILS
+              </span>
+
+              <span>
+                STATUS
+              </span>
+
+              <span>
+                ACTIONS
+              </span>
+
+            </div>
+
+
+            {filteredPolls.map(
+              (poll, index) => (
+
+                <article
+                  key={poll.id}
+                  className="admin-poll-row"
+                >
+
+                  {/* NUMBER */}
+
+                  <div className="admin-poll-row__number">
+                    {String(
+                      index + 1
+                    ).padStart(2, "0")}
+                  </div>
+
+
+                  {/* MAIN */}
+
+                  <div className="admin-poll-row__main">
+
+                    <div className="admin-poll-row__title-wrap">
+
+                      <h2>
+                        {poll.title}
+                      </h2>
+
+                      <span
+                        className={`admin-poll-status admin-poll-status--${poll.status.toLowerCase()}`}
+                      >
+                        {poll.status}
+                      </span>
+
+                    </div>
+
+
+                    {poll.description && (
+                      <p>
+                        {poll.description}
+                      </p>
+                    )}
+
+
+                    <div className="admin-poll-row__meta">
+
+                      <span>
+                        <strong>
+                          Position
+                        </strong>
+
+                        {poll.position?.name ||
+                          "General"}
+                      </span>
+
+                      <span>
+                        <strong>
+                          Questions
+                        </strong>
+
+                        {poll.questions.length}
+                      </span>
+
+                      <span>
+                        <strong>
+                          Responses
+                        </strong>
+
+                        {(
+                          poll._count
+                            ?.responses || 0
+                        ).toLocaleString()}
+                      </span>
+
+                      <span>
+                        <strong>
+                          Public
+                        </strong>
+
+                        {poll.isPublic
+                          ? "Yes"
+                          : "No"}
+                      </span>
+
+                    </div>
+
+                  </div>
+
+
+                  {/* STATUS */}
+
+                  <div className="admin-poll-row__status">
+
+                    <span
+                      className={`admin-poll-status admin-poll-status--${poll.status.toLowerCase()}`}
+                    >
+                      {poll.status}
+                    </span>
+
+                    {poll.status ===
+                      "ACTIVE" && (
+                      <small>
+                        Accepting responses
+                      </small>
+                    )}
+
+                    {poll.status ===
+                      "DRAFT" && (
+                      <small>
+                        Not published
+                      </small>
+                    )}
+
+                    {poll.status ===
+                      "PAUSED" && (
+                      <small>
+                        Temporarily paused
+                      </small>
+                    )}
+
+                    {poll.status ===
+                      "CLOSED" && (
+                      <small>
+                        No longer accepting
+                      </small>
+                    )}
+
+                    {poll.status ===
+                      "ARCHIVED" && (
+                      <small>
+                        Archived
+                      </small>
+                    )}
+
+                  </div>
+
+
+                  {/* ACTIONS */}
+
+                  <div className="admin-poll-row__actions">
+
+                    <Link
+                      to={`/admin/polls/${poll.id}`}
+                      className="admin-poll-manage"
+                    >
+                      Manage
+                      <span>
+                        →
+                      </span>
+                    </Link>
+
+
+                    <div className="admin-poll-status-actions">
+
+                      {poll.status ===
+                        "DRAFT" && (
+                        <button
+                          type="button"
+                          disabled={
+                            changingStatus ===
+                            poll.id
+                          }
+                          onClick={() =>
+                            changeStatus(
+                              poll.id,
+                              "ACTIVE"
+                            )
+                          }
+                        >
+                          {changingStatus ===
+                          poll.id
+                            ? "Updating..."
+                            : "Publish"}
+                        </button>
+                      )}
+
+
+                      {poll.status ===
+                        "ACTIVE" && (
+                        <button
+                          type="button"
+                          disabled={
+                            changingStatus ===
+                            poll.id
+                          }
+                          onClick={() =>
+                            changeStatus(
+                              poll.id,
+                              "PAUSED"
+                            )
+                          }
+                        >
+                          {changingStatus ===
+                          poll.id
+                            ? "Updating..."
+                            : "Pause"}
+                        </button>
+                      )}
+
+
+                      {poll.status ===
+                        "PAUSED" && (
+                        <button
+                          type="button"
+                          disabled={
+                            changingStatus ===
+                            poll.id
+                          }
+                          onClick={() =>
+                            changeStatus(
+                              poll.id,
+                              "ACTIVE"
+                            )
+                          }
+                        >
+                          {changingStatus ===
+                          poll.id
+                            ? "Updating..."
+                            : "Resume"}
+                        </button>
+                      )}
+
+
+                      {(poll.status ===
+                        "ACTIVE" ||
+                        poll.status ===
+                          "PAUSED") && (
+                        <button
+                          type="button"
+                          className="admin-poll-action--danger"
+                          disabled={
+                            changingStatus ===
+                            poll.id
+                          }
+                          onClick={() =>
+                            changeStatus(
+                              poll.id,
+                              "CLOSED"
+                            )
+                          }
+                        >
+                          {changingStatus ===
+                          poll.id
+                            ? "Updating..."
+                            : "Close"}
+                        </button>
+                      )}
+
+
+                      {poll.status ===
+                        "CLOSED" && (
+                        <button
+                          type="button"
+                          disabled={
+                            changingStatus ===
+                            poll.id
+                          }
+                          onClick={() =>
+                            changeStatus(
+                              poll.id,
+                              "ARCHIVED"
+                            )
+                          }
+                        >
+                          {changingStatus ===
+                          poll.id
+                            ? "Updating..."
+                            : "Archive"}
+                        </button>
+                      )}
+
+                    </div>
+
+                  </div>
+
+                </article>
+
+              )
+            )}
+
+          </section>
+
+        )}
+
+      </main>
+
+      <Footer />
+
+    </div>
   );
 }
