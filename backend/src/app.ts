@@ -37,7 +37,7 @@ app.use(
   cors({
     origin:
       process.env.FRONTEND_URL ||
-      "https://kenya-opinion-polls-three.vercel.app/",
+      "https://kenya-opinion-polls-three.vercel.app",
 
     credentials: true,
   })

@@ -1,5 +1,5 @@
 const API_URL =
-"https://kenyaopinionpolls.onrender.com";
+"https://kenyaopinionpolls.onrender.com/api";
   // "http://localhost:5000/api";
 
 /**
