@@ -1,5 +1,5 @@
-const API_URL = "http://localhost:5000/api";
-
+const API_URL =
+  "https://kenyaopinionpolls.onrender.com/api";
 function getToken() {
   return localStorage.getItem("token");
 }
