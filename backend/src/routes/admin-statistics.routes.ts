@@ -699,14 +699,13 @@ async function buildCandidateResults(
       include: {
 
         poll: {
-
-          include: {
-
-            position: true,
-
-          },
-
-        },
+  include: {
+    position: true,
+    targetCounty: true,
+    targetConstituency: true,
+    targetWard: true,
+  },
+},
 
         options: {
 
@@ -851,36 +850,50 @@ async function buildCandidateResults(
           : 0;
 
 
-      results.push({
+results.push({
+  candidateId: candidate.id,
 
-        candidateId:
-          candidate.id,
+  candidateName:
+    candidate.name,
 
-        candidateName:
-          candidate.name,
+  party:
+    candidate.party
+    ?? "",
 
-        party:
-          candidate.party
-            ?? "",
+  position:
+    candidate.position?.name
+    ?? question.poll.position?.name
+    ?? "",
 
-        position:
-          candidate.position?.name
-            ?? question.poll.position?.name
-            ?? "",
+  poll:
+    question.poll.title,
 
-        poll:
-          question.poll.title,
+  question:
+    question.question,
 
-        question:
-          question.question,
+  responses:
+    count,
 
-        responses:
-          count,
+  percentage,
 
-        percentage,
+  pollId:
+    question.poll.id,
 
-      });
+  questionId:
+    question.id,
 
+  targetCounty:
+    question.poll.targetCounty?.name
+    ?? "",
+
+  targetConstituency:
+    question.poll.targetConstituency?.name
+    ?? "",
+
+  targetWard:
+    question.poll.targetWard?.name
+    ?? "",
+});
     }
 
   }

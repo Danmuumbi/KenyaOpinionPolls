@@ -64,6 +64,7 @@
 
 .home-hero {
   padding: 52px 0 64px;
+  
 }
 
 .home-hero-grid {
@@ -1167,3 +1168,14 @@
     transition: none !important;
   }
 }
+
+/* .home-hero {
+  width: 100%;
+  min-height: 680px;
+  box-sizing: border-box;
+
+  background-image: url("image.png");
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+} */
