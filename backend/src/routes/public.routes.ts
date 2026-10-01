@@ -83,8 +83,7 @@ function setParticipantCookie(
   token: string
 ): void {
   const isProduction =
-    process.env.NODE_ENV ===
-    "production";
+    process.env.NODE_ENV === "production";
 
   const cookieParts = [
     `${PARTICIPANT_COOKIE}=${encodeURIComponent(
@@ -92,12 +91,14 @@ function setParticipantCookie(
     )}`,
     "HttpOnly",
     "Path=/",
-    "SameSite=Lax",
     "Max-Age=31536000",
   ];
 
   if (isProduction) {
+    cookieParts.push("SameSite=None");
     cookieParts.push("Secure");
+  } else {
+    cookieParts.push("SameSite=Lax");
   }
 
   res.setHeader(
@@ -1375,7 +1376,7 @@ router.get(
        * ------------------------------------------------------------
        *
        * Quick Vote expects:
-       *
+       * function setParticipantCookie(
        * Poll
        *   └── Position
        *        └── One required question
