@@ -292,14 +292,14 @@ export default function Home() {
      SELECT QUICK VOTE
   ================================================================= */
 
-  function selectQuickVote(
-    vote: QuickVote
-  ) {
-    setSelectedQuickVote(vote);
-    setSelectedCandidate(null);
-    setVoteSubmitted(false);
-    setQuickVoteError("");
-  }
+  // function selectQuickVote(
+  //   vote: QuickVote
+  // ) {
+  //   setSelectedQuickVote(vote);
+  //   setSelectedCandidate(null);
+  //   setVoteSubmitted(false);
+  //   setQuickVoteError("");
+  // }
 
   /* ================================================================
      SELECT CANDIDATE

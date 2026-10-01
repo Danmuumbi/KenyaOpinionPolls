@@ -34,6 +34,9 @@ type LocationState = {
 export default function PositionPolls() {
   const { positionId } = useParams();
 
+  const validPositionId =
+    positionId ?? "";
+
   const [position, setPosition] =
     useState<PublicPosition | null>(null);
 
@@ -54,7 +57,7 @@ export default function PositionPolls() {
     useState("");
 
   useEffect(() => {
-    if (!positionId) {
+    if (!validPositionId) {
       return;
     }
 
@@ -75,7 +78,8 @@ export default function PositionPolls() {
         const selectedPosition =
           positions.find(
             (item) =>
-              item.id === positionId
+              item.id ===
+              validPositionId
           );
 
         if (!selectedPosition) {
@@ -88,7 +92,9 @@ export default function PositionPolls() {
           return;
         }
 
-        setPosition(selectedPosition);
+        setPosition(
+          selectedPosition
+        );
 
         const filters = {
           countyId:
@@ -106,7 +112,7 @@ export default function PositionPolls() {
 
         const data =
           await getPublicPositionPolls(
-            positionId,
+            validPositionId,
             filters
           );
 
@@ -138,7 +144,7 @@ export default function PositionPolls() {
       cancelled = true;
     };
   }, [
-    positionId,
+    validPositionId,
     location.countyId,
     location.constituencyId,
     location.wardId,
@@ -265,6 +271,7 @@ export default function PositionPolls() {
           </Link>
 
           <header className="position-header">
+
             <div className="position-header-label">
               <span className="position-dot" />
 
@@ -273,6 +280,7 @@ export default function PositionPolls() {
 
             <h1>
               {position.name}
+
               <span>
                 Opinion Polls
               </span>
@@ -284,12 +292,16 @@ export default function PositionPolls() {
               where you are eligible to
               participate.
             </p>
+
           </header>
 
           {requiresCounty && (
             <section className="location-panel">
+
               <div className="location-panel-heading">
+
                 <div>
+
                   <span className="section-kicker">
                     FIND YOUR AREA
                   </span>
@@ -297,11 +309,13 @@ export default function PositionPolls() {
                   <h2>
                     Choose a location
                   </h2>
+
                 </div>
 
                 <span className="location-step">
                   Filter
                 </span>
+
               </div>
 
               <p className="location-description">
@@ -340,12 +354,16 @@ export default function PositionPolls() {
                   Clear location filter
                 </button>
               )}
+
             </section>
           )}
 
           <section className="polls-section">
+
             <div className="polls-heading">
+
               <div>
+
                 <span className="section-kicker">
                   AVAILABLE POLLS
                 </span>
@@ -355,6 +373,7 @@ export default function PositionPolls() {
                     ? "Polls for this area"
                     : `Active ${position.name} polls`}
                 </h2>
+
               </div>
 
               {loading && (
@@ -362,11 +381,14 @@ export default function PositionPolls() {
                   Updating...
                 </span>
               )}
+
             </div>
+
 
             {!loading &&
               polls.length === 0 && (
                 <div className="empty-polls">
+
                   <div className="empty-polls-mark">
                     —
                   </div>
@@ -399,11 +421,14 @@ export default function PositionPolls() {
                       View all polls
                     </button>
                   )}
+
                 </div>
               )}
 
+
             {polls.length > 0 && (
               <div className="poll-list">
+
                 {polls.map(
                   (
                     poll,
@@ -413,6 +438,7 @@ export default function PositionPolls() {
                       key={poll.id}
                       className="poll-item"
                     >
+
                       <div className="poll-index">
                         {String(
                           index + 1
@@ -420,7 +446,9 @@ export default function PositionPolls() {
                       </div>
 
                       <div className="poll-main">
+
                         <div className="poll-meta">
+
                           <span>
                             ACTIVE POLL
                           </span>
@@ -434,6 +462,7 @@ export default function PositionPolls() {
                               poll
                             )}
                           </span>
+
                         </div>
 
                         <h3>
@@ -447,8 +476,10 @@ export default function PositionPolls() {
                         )}
 
                         <div className="poll-target">
+
                           {poll.targetCounty && (
                             <span>
+
                               <strong>
                                 County
                               </strong>
@@ -458,11 +489,13 @@ export default function PositionPolls() {
                                   .targetCounty
                                   .name
                               }
+
                             </span>
                           )}
 
                           {poll.targetConstituency && (
                             <span>
+
                               <strong>
                                 Constituency
                               </strong>
@@ -472,11 +505,13 @@ export default function PositionPolls() {
                                   .targetConstituency
                                   .name
                               }
+
                             </span>
                           )}
 
                           {poll.targetWard && (
                             <span>
+
                               <strong>
                                 Ward
                               </strong>
@@ -486,12 +521,16 @@ export default function PositionPolls() {
                                   .targetWard
                                   .name
                               }
+
                             </span>
                           )}
+
                         </div>
+
                       </div>
 
                       <div className="poll-actions">
+
                         <Link
                           to={`/polls/${poll.id}`}
                           className="statistics-link"
@@ -504,22 +543,30 @@ export default function PositionPolls() {
                           className="participate-link"
                         >
                           Participate
+
                           <span aria-hidden="true">
                             →
                           </span>
                         </Link>
+
                       </div>
+
                     </article>
                   )
                 )}
+
               </div>
             )}
+
           </section>
 
+
           <section className="position-information">
+
             <div className="information-line" />
 
             <div className="information-content">
+
               <span className="information-label">
                 ABOUT THESE POLLS
               </span>
@@ -532,7 +579,9 @@ export default function PositionPolls() {
                 interpreted as official election
                 results.
               </p>
+
             </div>
+
           </section>
 
         </div>

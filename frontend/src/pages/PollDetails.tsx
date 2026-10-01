@@ -24,13 +24,12 @@ import Footer from "../components/Footer";
 
 import "./PollDetails.css";
 
-
 export default function PollDetails() {
-  const {
-    pollId,
-  } = useParams<{
+  const { pollId } = useParams<{
     pollId: string;
   }>();
+
+  const validPollId = pollId ?? "";
 
   const [poll, setPoll] =
     useState<PublicPollDetails | null>(null);
@@ -44,9 +43,8 @@ export default function PollDetails() {
   const [error, setError] =
     useState("");
 
-
   useEffect(() => {
-    if (!pollId) {
+    if (!validPollId) {
       return;
     }
 
@@ -57,7 +55,7 @@ export default function PollDetails() {
 
         const pollData =
           await getPublicPoll(
-            pollId
+            validPollId
           );
 
         setPoll(pollData);
@@ -65,7 +63,7 @@ export default function PollDetails() {
         if (pollData.allowResults) {
           const resultData =
             await getPollResults(
-              pollId
+              validPollId
             );
 
           setResults(resultData);
@@ -84,94 +82,86 @@ export default function PollDetails() {
     }
 
     loadPoll();
-  }, [pollId]);
+  }, [validPollId]);
 
+  const summaries = useMemo(() => {
+    if (!results) {
+      return [];
+    }
 
-  const summaries =
-    useMemo(() => {
-      if (!results) {
-        return [];
-      }
+    return results.questions.map(
+      (question) => {
+        const options =
+          [...question.options].sort(
+            (a, b) =>
+              b.percentage -
+              a.percentage
+          );
 
-      return results.questions.map(
-        (question) => {
-          const options =
-            [...question.options]
-              .sort(
-                (a, b) =>
-                  b.percentage -
-                  a.percentage
-              );
+        if (
+          question.totalResponses === 0 ||
+          options.length === 0
+        ) {
+          return {
+            questionId:
+              question.id,
+            text:
+              "There are not yet enough responses to describe the current distribution.",
+          };
+        }
 
-          if (
-            question.totalResponses === 0 ||
-            options.length === 0
-          ) {
-            return {
-              questionId:
-                question.id,
+        const first =
+          options[0];
 
-              text:
-                "There are not yet enough responses to describe the current distribution.",
-            };
-          }
+        const second =
+          options[1];
 
-          const first =
-            options[0];
+        const firstName =
+          first.candidate?.name ||
+          first.label;
 
-          const second =
-            options[1];
+        const firstPercentage =
+          first.percentage;
 
-          const firstName =
-            first.candidate?.name ||
-            first.label;
+        if (
+          firstPercentage <= 0
+        ) {
+          return {
+            questionId:
+              question.id,
+            text:
+              "No option currently has a measurable share of the recorded responses.",
+          };
+        }
 
-          const firstPercentage =
-            first.percentage;
-
-          if (
-            firstPercentage <= 0
-          ) {
-            return {
-              questionId:
-                question.id,
-
-              text:
-                "No option currently has a measurable share of the recorded responses.",
-            };
-          }
-
-          if (
-            second &&
-            Math.abs(
-              first.percentage -
+        if (
+          second &&
+          Math.abs(
+            first.percentage -
               second.percentage
-            ) <= 5
-          ) {
-            const secondName =
-              second.candidate?.name ||
-              second.label;
-
-            return {
-              questionId:
-                question.id,
-
-              text:
-                `${firstName} currently has the largest recorded share at ${firstPercentage.toFixed(1)}%, while ${secondName} is within five percentage points.`,
-            };
-          }
+          ) <= 5
+        ) {
+          const secondName =
+            second.candidate?.name ||
+            second.label;
 
           return {
             questionId:
               question.id,
-
             text:
-              `${firstName} currently has the largest recorded share of responses at ${firstPercentage.toFixed(1)}%.`,
+              `${firstName} currently has the largest recorded share at ${firstPercentage.toFixed(1)}%, while ${secondName} is within five percentage points.`,
           };
         }
-      );
-    }, [results]);
 
+        return {
+          questionId:
+            question.id,
+          text:
+            `${firstName} currently has the largest recorded share of responses at ${firstPercentage.toFixed(1)}%.`,
+        };
+      }
+    );
+  }, [results]);
 
   if (loading) {
     return (
@@ -179,9 +169,7 @@ export default function PollDetails() {
         <Navbar />
 
         <main className="poll-details-page">
-
           <section className="poll-details-loading">
-
             <div className="poll-details-loading__eyebrow">
               SFD / POLL
             </div>
@@ -198,9 +186,7 @@ export default function PollDetails() {
               Loading the poll and its
               available information.
             </p>
-
           </section>
-
         </main>
 
         <Footer />
@@ -208,16 +194,13 @@ export default function PollDetails() {
     );
   }
 
-
   if (error || !poll) {
     return (
       <>
         <Navbar />
 
         <main className="poll-details-page">
-
           <section className="poll-details-error">
-
             <span>
               POLL / UNAVAILABLE
             </span>
@@ -239,16 +222,13 @@ export default function PollDetails() {
             <Link to="/polls">
               ← Back to polls
             </Link>
-
           </section>
-
         </main>
 
         <Footer />
       </>
     );
   }
-
 
   return (
     <>
@@ -261,11 +241,9 @@ export default function PollDetails() {
             ================================================= */}
 
         <section className="poll-details-hero">
-
           <div className="poll-details-shell">
 
             <div className="poll-details-hero__top">
-
               <Link
                 to="/polls"
                 className="poll-details-back"
@@ -276,9 +254,7 @@ export default function PollDetails() {
               <span>
                 SFD / POLL
               </span>
-
             </div>
-
 
             <div className="poll-details-hero__content">
 
@@ -295,7 +271,6 @@ export default function PollDetails() {
                   {poll.description}
                 </p>
               )}
-
 
               <div className="poll-details-scope">
 
@@ -350,9 +325,7 @@ export default function PollDetails() {
               </div>
 
             </div>
-
           </div>
-
         </section>
 
 
@@ -361,7 +334,6 @@ export default function PollDetails() {
             ================================================= */}
 
         {!poll.allowResults ? (
-
           <section className="poll-details-shell">
 
             <div className="poll-results-private">
@@ -402,11 +374,8 @@ export default function PollDetails() {
             </div>
 
           </section>
-
         ) : (
-
           <>
-
             {/* =============================================
                 RESULTS INTRO
                 ============================================= */}
@@ -436,7 +405,6 @@ export default function PollDetails() {
                   </div>
 
                 </div>
-
 
                 <p className="poll-results-heading__text">
                   Percentages represent the
@@ -610,6 +578,7 @@ export default function PollDetails() {
                                           {percentage.toFixed(
                                             1
                                           )}
+
                                           <small>
                                             %
                                           </small>
@@ -652,6 +621,7 @@ export default function PollDetails() {
                     </span>
 
                     <div>
+
                       <h2>
                         No responses yet.
                       </h2>
@@ -661,6 +631,7 @@ export default function PollDetails() {
                         no responses available
                         for this poll.
                       </p>
+
                     </div>
 
                   </div>
@@ -704,6 +675,7 @@ export default function PollDetails() {
                     to={`/polls/${poll.id}/participate`}
                   >
                     Participate
+
                     <strong>
                       ↗
                     </strong>
@@ -728,6 +700,7 @@ export default function PollDetails() {
                 <div className="poll-details-shell">
 
                   <div className="poll-information__heading">
+
                     <span>
                       POLL INFORMATION
                     </span>
@@ -735,6 +708,7 @@ export default function PollDetails() {
                     <h2>
                       About this poll
                     </h2>
+
                   </div>
 
 

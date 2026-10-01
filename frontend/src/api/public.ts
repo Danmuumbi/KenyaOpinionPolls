@@ -784,11 +784,12 @@ export interface PublicAddedCandidateResponse {
   existing?: boolean;
 }
 
+
 export async function addOtherCandidate(
   pollId: string,
   name: string
 ): Promise<PublicAddedCandidateResponse> {
-  return publicFetch(
+  const data = await publicFetch(
     `/public/polls/${pollId}/other-candidate`,
     {
       method: "POST",
@@ -800,4 +801,39 @@ export async function addOtherCandidate(
       }),
     }
   );
+
+  if (
+    typeof data !== "object" ||
+    data === null ||
+    !("data" in data)
+  ) {
+    throw new Error(
+      "Invalid candidate response from server"
+    );
+  }
+
+  return (
+    data as {
+      data: PublicAddedCandidateResponse;
+    }
+  ).data;
 }
+
+
+
+// export async function addOtherCandidate(
+//   pollId: string,
+//   name: string
+// ): Promise<PublicAddedCandidateResponse> {
+//   return publicFetch(
+//     `/public/polls/${pollId}/other-candidate`,
+//     {
+//       method: "POST",
+//       headers: {
+//         "Content-Type": "application/json",
+//       },
+//       body: JSON.stringify({
+//         name,
+//       }),
+//     }
+//   );

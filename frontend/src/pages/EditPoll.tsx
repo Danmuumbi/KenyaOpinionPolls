@@ -24,6 +24,7 @@ import "./EditPoll.css";
 type EditableQuestion =
   CreatePollQuestion & {
     id?: string;
+    tempId?: string;
   };
 
 function formatDateTimeLocal(
