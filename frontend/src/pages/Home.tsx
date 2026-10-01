@@ -1499,4 +1499,3 @@ const [candidatePages, setCandidatePages] =
 
   );
 }
-<div className="candidate-strip">
