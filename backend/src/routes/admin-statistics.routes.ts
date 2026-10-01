@@ -15,7 +15,7 @@ import {
 
 import { prisma } from "../config/database";
 
-
+import { PollType, PollStatus } from "../generated/prisma/enums";
 // --------------------------------------------------------------------------
 // ROUTER
 // --------------------------------------------------------------------------
@@ -120,15 +120,21 @@ router.get(
               ? pollId
               : undefined,
 
-          pollType:
-            typeof pollType === "string"
-              ? pollType
-              : undefined,
+        pollType:
+  typeof pollType === "string" &&
+  Object.values(PollType).includes(
+    pollType as PollType
+  )
+    ? (pollType as PollType)
+    : undefined,
 
-          pollStatus:
-            typeof pollStatus === "string"
-              ? pollStatus
-              : undefined,
+pollStatus:
+  typeof pollStatus === "string" &&
+  Object.values(PollStatus).includes(
+    pollStatus as PollStatus
+  )
+    ? (pollStatus as PollStatus)
+    : undefined,
 
           positionId:
             typeof positionId === "string"
