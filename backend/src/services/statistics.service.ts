@@ -1,9 +1,10 @@
 import { prisma } from "../config/database";
+import type { Prisma, PollType, PollStatus } from "../generated/prisma";
 
 export interface StatisticsFilters {
   pollId?: string;
-  pollType?: string;
-  pollStatus?: string;
+  pollType?: PollType;
+  pollStatus?: PollStatus;
 
   positionId?: string;
   candidateId?: string;
@@ -17,7 +18,9 @@ export interface StatisticsFilters {
   to?: string;
 }
 
-function buildWhere(filters: StatisticsFilters) {
+function buildWhere(
+  filters: StatisticsFilters
+): Prisma.ResponseWhereInput {
   const {
     pollId,
     pollType,
