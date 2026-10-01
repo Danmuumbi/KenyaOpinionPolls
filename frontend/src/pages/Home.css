@@ -1179,3 +1179,192 @@
   background-size: cover;
   background-repeat: no-repeat;
 } */
+
+/* ================================================================
+   MOBILE / RESPONSIVE CANDIDATE GALLERY
+================================================================ */
+
+.home-page {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.home-shell {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+
+/* Candidate gallery */
+
+.candidate-gallery {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+
+/* Candidate cards */
+
+.candidate-strip {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+
+  overflow: hidden;
+}
+
+
+/* Prevent individual candidate cards
+   from forcing the page wider */
+
+.candidate-person {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+
+/* Candidate images */
+
+.candidate-person img,
+.candidate-placeholder {
+  width: 92px;
+  height: 92px;
+  max-width: 100%;
+
+  object-fit: cover;
+  display: block;
+}
+
+
+/* Pagination */
+
+.candidate-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+
+  margin-top: 18px;
+}
+
+.candidate-pagination button {
+  border: 1px solid #d1d5db;
+  background: white;
+  color: #1e293b;
+
+  padding: 8px 14px;
+  border-radius: 8px;
+
+  cursor: pointer;
+  font: inherit;
+}
+
+.candidate-pagination button:hover:not(:disabled) {
+  background: #f8fafc;
+}
+
+.candidate-pagination button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.candidate-pagination span {
+  min-width: 55px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+
+/* ================================================================
+   MOBILE
+================================================================ */
+
+@media (max-width: 700px) {
+
+  .home-page {
+    overflow-x: hidden;
+  }
+
+  .home-shell {
+    width: 100%;
+    max-width: 100%;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .candidate-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+
+    overflow: hidden;
+  }
+
+  .candidate-person {
+    width: 100%;
+  }
+
+  .candidate-person img,
+  .candidate-placeholder {
+    width: 76px;
+    height: 76px;
+  }
+
+  .candidate-person h4 {
+    font-size: 14px;
+    line-height: 1.25;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .candidate-person p {
+    font-size: 12px;
+  }
+
+  .candidate-pagination {
+    gap: 10px;
+    margin-top: 14px;
+  }
+
+  .candidate-pagination button {
+    padding: 7px 10px;
+    font-size: 13px;
+  }
+
+  .candidate-pagination span {
+    font-size: 13px;
+  }
+}
+
+
+/* Very small phones */
+
+@media (max-width: 380px) {
+
+  .home-shell {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .candidate-strip {
+    gap: 8px;
+  }
+
+  .candidate-person img,
+  .candidate-placeholder {
+    width: 68px;
+    height: 68px;
+  }
+
+}

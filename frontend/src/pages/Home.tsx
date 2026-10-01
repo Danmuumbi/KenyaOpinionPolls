@@ -102,6 +102,13 @@ export default function Home() {
   const [voteSubmitted, setVoteSubmitted] =
     useState(false);
 
+    /* ================================================================
+   CANDIDATE PAGINATION
+================================================================ */
+
+const [candidatePages, setCandidatePages] =
+  useState<Record<string, number>>({});
+
     
   /* ================================================================
      LOAD EXISTING HOME DATA
@@ -426,6 +433,44 @@ export default function Home() {
     }
   }
 
+
+  function changeCandidatePage(
+  positionId: string,
+  direction: "next" | "previous",
+  totalCandidates: number
+) {
+  const pageSize = 4;
+
+  const totalPages = Math.ceil(
+    totalCandidates / pageSize
+  );
+
+  setCandidatePages((current) => {
+    const currentPage =
+      current[positionId] ?? 0;
+
+    let nextPage = currentPage;
+
+    if (direction === "next") {
+      nextPage = Math.min(
+        currentPage + 1,
+        totalPages - 1
+      );
+    }
+
+    if (direction === "previous") {
+      nextPage = Math.max(
+        currentPage - 1,
+        0
+      );
+    }
+
+    return {
+      ...current,
+      [positionId]: nextPage,
+    };
+  });
+}
   /* ================================================================
      LOADING
   ================================================================= */
@@ -1182,52 +1227,117 @@ export default function Home() {
 
                     {candidates.length > 0 ? (
 
-                      <div className="candidate-strip">
+                      <div className="candidate-gallery">
 
-                        {candidates.map(
-                          (candidate) => (
+  {(() => {
+    const pageSize = 4;
 
-                            <Link
-                              key={candidate.id}
-                              className="candidate-person"
-                              to={`/polls/position/${position.id}`}
-                            >
+    const currentPage =
+      candidatePages[position.id] ?? 0;
 
-                              {candidate.photoUrl ? (
-                                <img
-                                  src={
-                                    candidate.photoUrl
-                                  }
-                                  alt={
-                                    candidate.name
-                                  }
-                                  width="92"
-                                  height="92"
-                                  loading="lazy"
-                                />
-                              ) : (
-                                <div className="candidate-placeholder">
-                                  No image
-                                </div>
-                              )}
+    const totalPages =
+      Math.ceil(
+        candidates.length / pageSize
+      );
 
-                              <h4>
-                                {candidate.name}
-                              </h4>
+    const startIndex =
+      currentPage * pageSize;
 
-                              {candidate.party && (
-                                <p>
-                                  {candidate.party}
-                                </p>
-                              )}
+    const visibleCandidates =
+      candidates.slice(
+        startIndex,
+        startIndex + pageSize
+      );
 
-                            </Link>
+    return (
+      <>
+        <div className="candidate-strip">
 
-                          )
-                        )}
+          {visibleCandidates.map(
+            (candidate) => (
 
-                      </div>
+              <Link
+                key={candidate.id}
+                className="candidate-person"
+                to={`/polls/position/${position.id}`}
+              >
 
+                {candidate.photoUrl ? (
+                  <img
+                    src={candidate.photoUrl}
+                    alt={candidate.name}
+                    width="92"
+                    height="92"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="candidate-placeholder">
+                    No image
+                  </div>
+                )}
+
+                <h4>
+                  {candidate.name}
+                </h4>
+
+                {candidate.party && (
+                  <p>
+                    {candidate.party}
+                  </p>
+                )}
+
+              </Link>
+
+            )
+          )}
+
+        </div>
+
+        {totalPages > 1 && (
+          <div className="candidate-pagination">
+
+            <button
+              type="button"
+              disabled={currentPage === 0}
+              onClick={() =>
+                changeCandidatePage(
+                  position.id,
+                  "previous",
+                  candidates.length
+                )
+              }
+            >
+              ← Previous
+            </button>
+
+            <span>
+              {currentPage + 1} / {totalPages}
+            </span>
+
+            <button
+              type="button"
+              disabled={
+                currentPage ===
+                totalPages - 1
+              }
+              onClick={() =>
+                changeCandidatePage(
+                  position.id,
+                  "next",
+                  candidates.length
+                )
+              }
+            >
+              Next →
+            </button>
+
+          </div>
+        )}
+      </>
+    );
+  })()}
+
+</div>
                     ) : (
 
                       <p className="position-description">
@@ -1389,3 +1499,4 @@ export default function Home() {
 
   );
 }
+<div className="candidate-strip">
