@@ -174,7 +174,7 @@ export default function PollResults() {
               </span>
 
               <strong>
-                {results.totalResponses}
+                {/* {results.totalResponses} */}N/A
               </strong>
             </div>
 
