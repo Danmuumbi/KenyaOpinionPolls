@@ -26,6 +26,8 @@ import featuredPollsRoutes from "./routes/featured-polls.routes";
 
 import publicFeaturedPollsRoutes from "./routes/public-featured-polls.routes";
 import adminPollEditRoutes from "./routes/admin-poll-edit.routes";
+
+import agentResponseRoutes from "./routes/agent-response.routes";
 const app = express();
 
 const PORT =
@@ -220,6 +222,11 @@ app.use(
 app.use(
   "/api/admin/polls",
   adminPollEditRoutes
+);
+
+app.use(
+  "/api/agent-responses",
+  agentResponseRoutes
 );
 
 /*

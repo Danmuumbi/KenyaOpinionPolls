@@ -253,6 +253,23 @@ export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedIntNullableFilter<$PrismaModel>
 }
 
+export type EnumResponseSourceFilter<$PrismaModel = never> = {
+  equals?: $Enums.ResponseSource | Prisma.EnumResponseSourceFieldRefInput<$PrismaModel>
+  in?: $Enums.ResponseSource[] | Prisma.ListEnumResponseSourceFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ResponseSource[] | Prisma.ListEnumResponseSourceFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumResponseSourceFilter<$PrismaModel> | $Enums.ResponseSource
+}
+
+export type EnumResponseSourceWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.ResponseSource | Prisma.EnumResponseSourceFieldRefInput<$PrismaModel>
+  in?: $Enums.ResponseSource[] | Prisma.ListEnumResponseSourceFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ResponseSource[] | Prisma.ListEnumResponseSourceFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumResponseSourceWithAggregatesFilter<$PrismaModel> | $Enums.ResponseSource
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumResponseSourceFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumResponseSourceFilter<$PrismaModel>
+}
+
 export type EnumUserRoleFilter<$PrismaModel = never> = {
   equals?: $Enums.UserRole | Prisma.EnumUserRoleFieldRefInput<$PrismaModel>
   in?: $Enums.UserRole[] | Prisma.ListEnumUserRoleFieldRefInput<$PrismaModel>
@@ -520,6 +537,23 @@ export type NestedFloatNullableFilter<$PrismaModel = never> = {
   gt?: number | Prisma.FloatFieldRefInput<$PrismaModel>
   gte?: number | Prisma.FloatFieldRefInput<$PrismaModel>
   not?: Prisma.NestedFloatNullableFilter<$PrismaModel> | number | null
+}
+
+export type NestedEnumResponseSourceFilter<$PrismaModel = never> = {
+  equals?: $Enums.ResponseSource | Prisma.EnumResponseSourceFieldRefInput<$PrismaModel>
+  in?: $Enums.ResponseSource[] | Prisma.ListEnumResponseSourceFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ResponseSource[] | Prisma.ListEnumResponseSourceFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumResponseSourceFilter<$PrismaModel> | $Enums.ResponseSource
+}
+
+export type NestedEnumResponseSourceWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.ResponseSource | Prisma.EnumResponseSourceFieldRefInput<$PrismaModel>
+  in?: $Enums.ResponseSource[] | Prisma.ListEnumResponseSourceFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ResponseSource[] | Prisma.ListEnumResponseSourceFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumResponseSourceWithAggregatesFilter<$PrismaModel> | $Enums.ResponseSource
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumResponseSourceFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumResponseSourceFilter<$PrismaModel>
 }
 
 export type NestedEnumUserRoleFilter<$PrismaModel = never> = {

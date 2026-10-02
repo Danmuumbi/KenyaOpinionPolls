@@ -27,6 +27,7 @@ export type AggregateResponse = {
 export type ResponseMinAggregateOutputType = {
   id: string | null
   pollId: string | null
+  source: $Enums.ResponseSource | null
   questionId: string | null
   optionId: string | null
   participantId: string | null
@@ -41,6 +42,7 @@ export type ResponseMinAggregateOutputType = {
 export type ResponseMaxAggregateOutputType = {
   id: string | null
   pollId: string | null
+  source: $Enums.ResponseSource | null
   questionId: string | null
   optionId: string | null
   participantId: string | null
@@ -55,6 +57,7 @@ export type ResponseMaxAggregateOutputType = {
 export type ResponseCountAggregateOutputType = {
   id: number
   pollId: number
+  source: number
   questionId: number
   optionId: number
   participantId: number
@@ -71,6 +74,7 @@ export type ResponseCountAggregateOutputType = {
 export type ResponseMinAggregateInputType = {
   id?: true
   pollId?: true
+  source?: true
   questionId?: true
   optionId?: true
   participantId?: true
@@ -85,6 +89,7 @@ export type ResponseMinAggregateInputType = {
 export type ResponseMaxAggregateInputType = {
   id?: true
   pollId?: true
+  source?: true
   questionId?: true
   optionId?: true
   participantId?: true
@@ -99,6 +104,7 @@ export type ResponseMaxAggregateInputType = {
 export type ResponseCountAggregateInputType = {
   id?: true
   pollId?: true
+  source?: true
   questionId?: true
   optionId?: true
   participantId?: true
@@ -186,6 +192,7 @@ export type ResponseGroupByArgs<ExtArgs extends runtime.Types.Extensions.Interna
 export type ResponseGroupByOutputType = {
   id: string
   pollId: string
+  source: $Enums.ResponseSource
   questionId: string
   optionId: string
   participantId: string
@@ -221,6 +228,7 @@ export type ResponseWhereInput = {
   NOT?: Prisma.ResponseWhereInput | Prisma.ResponseWhereInput[]
   id?: Prisma.StringFilter<"Response"> | string
   pollId?: Prisma.StringFilter<"Response"> | string
+  source?: Prisma.EnumResponseSourceFilter<"Response"> | $Enums.ResponseSource
   questionId?: Prisma.StringFilter<"Response"> | string
   optionId?: Prisma.StringFilter<"Response"> | string
   participantId?: Prisma.StringFilter<"Response"> | string
@@ -242,6 +250,7 @@ export type ResponseWhereInput = {
 export type ResponseOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   pollId?: Prisma.SortOrder
+  source?: Prisma.SortOrder
   questionId?: Prisma.SortOrder
   optionId?: Prisma.SortOrder
   participantId?: Prisma.SortOrder
@@ -267,6 +276,7 @@ export type ResponseWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.ResponseWhereInput[]
   NOT?: Prisma.ResponseWhereInput | Prisma.ResponseWhereInput[]
   pollId?: Prisma.StringFilter<"Response"> | string
+  source?: Prisma.EnumResponseSourceFilter<"Response"> | $Enums.ResponseSource
   questionId?: Prisma.StringFilter<"Response"> | string
   optionId?: Prisma.StringFilter<"Response"> | string
   participantId?: Prisma.StringFilter<"Response"> | string
@@ -288,6 +298,7 @@ export type ResponseWhereUniqueInput = Prisma.AtLeast<{
 export type ResponseOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   pollId?: Prisma.SortOrder
+  source?: Prisma.SortOrder
   questionId?: Prisma.SortOrder
   optionId?: Prisma.SortOrder
   participantId?: Prisma.SortOrder
@@ -308,6 +319,7 @@ export type ResponseScalarWhereWithAggregatesInput = {
   NOT?: Prisma.ResponseScalarWhereWithAggregatesInput | Prisma.ResponseScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"Response"> | string
   pollId?: Prisma.StringWithAggregatesFilter<"Response"> | string
+  source?: Prisma.EnumResponseSourceWithAggregatesFilter<"Response"> | $Enums.ResponseSource
   questionId?: Prisma.StringWithAggregatesFilter<"Response"> | string
   optionId?: Prisma.StringWithAggregatesFilter<"Response"> | string
   participantId?: Prisma.StringWithAggregatesFilter<"Response"> | string
@@ -321,6 +333,7 @@ export type ResponseScalarWhereWithAggregatesInput = {
 
 export type ResponseCreateInput = {
   id?: string
+  source?: $Enums.ResponseSource
   ipHash?: string | null
   userAgentHash?: string | null
   createdAt?: Date | string
@@ -336,6 +349,7 @@ export type ResponseCreateInput = {
 export type ResponseUncheckedCreateInput = {
   id?: string
   pollId: string
+  source?: $Enums.ResponseSource
   questionId: string
   optionId: string
   participantId: string
@@ -349,6 +363,7 @@ export type ResponseUncheckedCreateInput = {
 
 export type ResponseUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  source?: Prisma.EnumResponseSourceFieldUpdateOperationsInput | $Enums.ResponseSource
   ipHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userAgentHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -364,6 +379,7 @@ export type ResponseUpdateInput = {
 export type ResponseUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   pollId?: Prisma.StringFieldUpdateOperationsInput | string
+  source?: Prisma.EnumResponseSourceFieldUpdateOperationsInput | $Enums.ResponseSource
   questionId?: Prisma.StringFieldUpdateOperationsInput | string
   optionId?: Prisma.StringFieldUpdateOperationsInput | string
   participantId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -378,6 +394,7 @@ export type ResponseUncheckedUpdateInput = {
 export type ResponseCreateManyInput = {
   id?: string
   pollId: string
+  source?: $Enums.ResponseSource
   questionId: string
   optionId: string
   participantId: string
@@ -391,6 +408,7 @@ export type ResponseCreateManyInput = {
 
 export type ResponseUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  source?: Prisma.EnumResponseSourceFieldUpdateOperationsInput | $Enums.ResponseSource
   ipHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userAgentHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -399,6 +417,7 @@ export type ResponseUpdateManyMutationInput = {
 export type ResponseUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   pollId?: Prisma.StringFieldUpdateOperationsInput | string
+  source?: Prisma.EnumResponseSourceFieldUpdateOperationsInput | $Enums.ResponseSource
   questionId?: Prisma.StringFieldUpdateOperationsInput | string
   optionId?: Prisma.StringFieldUpdateOperationsInput | string
   participantId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -429,6 +448,7 @@ export type ResponsePollIdQuestionIdParticipantIdCompoundUniqueInput = {
 export type ResponseCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   pollId?: Prisma.SortOrder
+  source?: Prisma.SortOrder
   questionId?: Prisma.SortOrder
   optionId?: Prisma.SortOrder
   participantId?: Prisma.SortOrder
@@ -443,6 +463,7 @@ export type ResponseCountOrderByAggregateInput = {
 export type ResponseMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   pollId?: Prisma.SortOrder
+  source?: Prisma.SortOrder
   questionId?: Prisma.SortOrder
   optionId?: Prisma.SortOrder
   participantId?: Prisma.SortOrder
@@ -457,6 +478,7 @@ export type ResponseMaxOrderByAggregateInput = {
 export type ResponseMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   pollId?: Prisma.SortOrder
+  source?: Prisma.SortOrder
   questionId?: Prisma.SortOrder
   optionId?: Prisma.SortOrder
   participantId?: Prisma.SortOrder
@@ -762,8 +784,13 @@ export type ResponseUncheckedUpdateManyWithoutParticipantNestedInput = {
   deleteMany?: Prisma.ResponseScalarWhereInput | Prisma.ResponseScalarWhereInput[]
 }
 
+export type EnumResponseSourceFieldUpdateOperationsInput = {
+  set?: $Enums.ResponseSource
+}
+
 export type ResponseCreateWithoutCountyInput = {
   id?: string
+  source?: $Enums.ResponseSource
   ipHash?: string | null
   userAgentHash?: string | null
   createdAt?: Date | string
@@ -778,6 +805,7 @@ export type ResponseCreateWithoutCountyInput = {
 export type ResponseUncheckedCreateWithoutCountyInput = {
   id?: string
   pollId: string
+  source?: $Enums.ResponseSource
   questionId: string
   optionId: string
   participantId: string
@@ -820,6 +848,7 @@ export type ResponseScalarWhereInput = {
   NOT?: Prisma.ResponseScalarWhereInput | Prisma.ResponseScalarWhereInput[]
   id?: Prisma.StringFilter<"Response"> | string
   pollId?: Prisma.StringFilter<"Response"> | string
+  source?: Prisma.EnumResponseSourceFilter<"Response"> | $Enums.ResponseSource
   questionId?: Prisma.StringFilter<"Response"> | string
   optionId?: Prisma.StringFilter<"Response"> | string
   participantId?: Prisma.StringFilter<"Response"> | string
@@ -833,6 +862,7 @@ export type ResponseScalarWhereInput = {
 
 export type ResponseCreateWithoutConstituencyInput = {
   id?: string
+  source?: $Enums.ResponseSource
   ipHash?: string | null
   userAgentHash?: string | null
   createdAt?: Date | string
@@ -847,6 +877,7 @@ export type ResponseCreateWithoutConstituencyInput = {
 export type ResponseUncheckedCreateWithoutConstituencyInput = {
   id?: string
   pollId: string
+  source?: $Enums.ResponseSource
   questionId: string
   optionId: string
   participantId: string
@@ -885,6 +916,7 @@ export type ResponseUpdateManyWithWhereWithoutConstituencyInput = {
 
 export type ResponseCreateWithoutWardInput = {
   id?: string
+  source?: $Enums.ResponseSource
   ipHash?: string | null
   userAgentHash?: string | null
   createdAt?: Date | string
@@ -899,6 +931,7 @@ export type ResponseCreateWithoutWardInput = {
 export type ResponseUncheckedCreateWithoutWardInput = {
   id?: string
   pollId: string
+  source?: $Enums.ResponseSource
   questionId: string
   optionId: string
   participantId: string
@@ -937,6 +970,7 @@ export type ResponseUpdateManyWithWhereWithoutWardInput = {
 
 export type ResponseCreateWithoutPollInput = {
   id?: string
+  source?: $Enums.ResponseSource
   ipHash?: string | null
   userAgentHash?: string | null
   createdAt?: Date | string
@@ -950,6 +984,7 @@ export type ResponseCreateWithoutPollInput = {
 
 export type ResponseUncheckedCreateWithoutPollInput = {
   id?: string
+  source?: $Enums.ResponseSource
   questionId: string
   optionId: string
   participantId: string
@@ -989,6 +1024,7 @@ export type ResponseUpdateManyWithWhereWithoutPollInput = {
 
 export type ResponseCreateWithoutQuestionInput = {
   id?: string
+  source?: $Enums.ResponseSource
   ipHash?: string | null
   userAgentHash?: string | null
   createdAt?: Date | string
@@ -1003,6 +1039,7 @@ export type ResponseCreateWithoutQuestionInput = {
 export type ResponseUncheckedCreateWithoutQuestionInput = {
   id?: string
   pollId: string
+  source?: $Enums.ResponseSource
   optionId: string
   participantId: string
   countyId?: string | null
@@ -1041,6 +1078,7 @@ export type ResponseUpdateManyWithWhereWithoutQuestionInput = {
 
 export type ResponseCreateWithoutOptionInput = {
   id?: string
+  source?: $Enums.ResponseSource
   ipHash?: string | null
   userAgentHash?: string | null
   createdAt?: Date | string
@@ -1055,6 +1093,7 @@ export type ResponseCreateWithoutOptionInput = {
 export type ResponseUncheckedCreateWithoutOptionInput = {
   id?: string
   pollId: string
+  source?: $Enums.ResponseSource
   questionId: string
   participantId: string
   countyId?: string | null
@@ -1093,6 +1132,7 @@ export type ResponseUpdateManyWithWhereWithoutOptionInput = {
 
 export type ResponseCreateWithoutParticipantInput = {
   id?: string
+  source?: $Enums.ResponseSource
   ipHash?: string | null
   userAgentHash?: string | null
   createdAt?: Date | string
@@ -1107,6 +1147,7 @@ export type ResponseCreateWithoutParticipantInput = {
 export type ResponseUncheckedCreateWithoutParticipantInput = {
   id?: string
   pollId: string
+  source?: $Enums.ResponseSource
   questionId: string
   optionId: string
   countyId?: string | null
@@ -1146,6 +1187,7 @@ export type ResponseUpdateManyWithWhereWithoutParticipantInput = {
 export type ResponseCreateManyCountyInput = {
   id?: string
   pollId: string
+  source?: $Enums.ResponseSource
   questionId: string
   optionId: string
   participantId: string
@@ -1158,6 +1200,7 @@ export type ResponseCreateManyCountyInput = {
 
 export type ResponseUpdateWithoutCountyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  source?: Prisma.EnumResponseSourceFieldUpdateOperationsInput | $Enums.ResponseSource
   ipHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userAgentHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1172,6 +1215,7 @@ export type ResponseUpdateWithoutCountyInput = {
 export type ResponseUncheckedUpdateWithoutCountyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   pollId?: Prisma.StringFieldUpdateOperationsInput | string
+  source?: Prisma.EnumResponseSourceFieldUpdateOperationsInput | $Enums.ResponseSource
   questionId?: Prisma.StringFieldUpdateOperationsInput | string
   optionId?: Prisma.StringFieldUpdateOperationsInput | string
   participantId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1185,6 +1229,7 @@ export type ResponseUncheckedUpdateWithoutCountyInput = {
 export type ResponseUncheckedUpdateManyWithoutCountyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   pollId?: Prisma.StringFieldUpdateOperationsInput | string
+  source?: Prisma.EnumResponseSourceFieldUpdateOperationsInput | $Enums.ResponseSource
   questionId?: Prisma.StringFieldUpdateOperationsInput | string
   optionId?: Prisma.StringFieldUpdateOperationsInput | string
   participantId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1198,6 +1243,7 @@ export type ResponseUncheckedUpdateManyWithoutCountyInput = {
 export type ResponseCreateManyConstituencyInput = {
   id?: string
   pollId: string
+  source?: $Enums.ResponseSource
   questionId: string
   optionId: string
   participantId: string
@@ -1210,6 +1256,7 @@ export type ResponseCreateManyConstituencyInput = {
 
 export type ResponseUpdateWithoutConstituencyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  source?: Prisma.EnumResponseSourceFieldUpdateOperationsInput | $Enums.ResponseSource
   ipHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userAgentHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1224,6 +1271,7 @@ export type ResponseUpdateWithoutConstituencyInput = {
 export type ResponseUncheckedUpdateWithoutConstituencyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   pollId?: Prisma.StringFieldUpdateOperationsInput | string
+  source?: Prisma.EnumResponseSourceFieldUpdateOperationsInput | $Enums.ResponseSource
   questionId?: Prisma.StringFieldUpdateOperationsInput | string
   optionId?: Prisma.StringFieldUpdateOperationsInput | string
   participantId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1237,6 +1285,7 @@ export type ResponseUncheckedUpdateWithoutConstituencyInput = {
 export type ResponseUncheckedUpdateManyWithoutConstituencyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   pollId?: Prisma.StringFieldUpdateOperationsInput | string
+  source?: Prisma.EnumResponseSourceFieldUpdateOperationsInput | $Enums.ResponseSource
   questionId?: Prisma.StringFieldUpdateOperationsInput | string
   optionId?: Prisma.StringFieldUpdateOperationsInput | string
   participantId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1250,6 +1299,7 @@ export type ResponseUncheckedUpdateManyWithoutConstituencyInput = {
 export type ResponseCreateManyWardInput = {
   id?: string
   pollId: string
+  source?: $Enums.ResponseSource
   questionId: string
   optionId: string
   participantId: string
@@ -1262,6 +1312,7 @@ export type ResponseCreateManyWardInput = {
 
 export type ResponseUpdateWithoutWardInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  source?: Prisma.EnumResponseSourceFieldUpdateOperationsInput | $Enums.ResponseSource
   ipHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userAgentHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1276,6 +1327,7 @@ export type ResponseUpdateWithoutWardInput = {
 export type ResponseUncheckedUpdateWithoutWardInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   pollId?: Prisma.StringFieldUpdateOperationsInput | string
+  source?: Prisma.EnumResponseSourceFieldUpdateOperationsInput | $Enums.ResponseSource
   questionId?: Prisma.StringFieldUpdateOperationsInput | string
   optionId?: Prisma.StringFieldUpdateOperationsInput | string
   participantId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1289,6 +1341,7 @@ export type ResponseUncheckedUpdateWithoutWardInput = {
 export type ResponseUncheckedUpdateManyWithoutWardInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   pollId?: Prisma.StringFieldUpdateOperationsInput | string
+  source?: Prisma.EnumResponseSourceFieldUpdateOperationsInput | $Enums.ResponseSource
   questionId?: Prisma.StringFieldUpdateOperationsInput | string
   optionId?: Prisma.StringFieldUpdateOperationsInput | string
   participantId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1301,6 +1354,7 @@ export type ResponseUncheckedUpdateManyWithoutWardInput = {
 
 export type ResponseCreateManyPollInput = {
   id?: string
+  source?: $Enums.ResponseSource
   questionId: string
   optionId: string
   participantId: string
@@ -1314,6 +1368,7 @@ export type ResponseCreateManyPollInput = {
 
 export type ResponseUpdateWithoutPollInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  source?: Prisma.EnumResponseSourceFieldUpdateOperationsInput | $Enums.ResponseSource
   ipHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userAgentHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1327,6 +1382,7 @@ export type ResponseUpdateWithoutPollInput = {
 
 export type ResponseUncheckedUpdateWithoutPollInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  source?: Prisma.EnumResponseSourceFieldUpdateOperationsInput | $Enums.ResponseSource
   questionId?: Prisma.StringFieldUpdateOperationsInput | string
   optionId?: Prisma.StringFieldUpdateOperationsInput | string
   participantId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1340,6 +1396,7 @@ export type ResponseUncheckedUpdateWithoutPollInput = {
 
 export type ResponseUncheckedUpdateManyWithoutPollInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  source?: Prisma.EnumResponseSourceFieldUpdateOperationsInput | $Enums.ResponseSource
   questionId?: Prisma.StringFieldUpdateOperationsInput | string
   optionId?: Prisma.StringFieldUpdateOperationsInput | string
   participantId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1354,6 +1411,7 @@ export type ResponseUncheckedUpdateManyWithoutPollInput = {
 export type ResponseCreateManyQuestionInput = {
   id?: string
   pollId: string
+  source?: $Enums.ResponseSource
   optionId: string
   participantId: string
   countyId?: string | null
@@ -1366,6 +1424,7 @@ export type ResponseCreateManyQuestionInput = {
 
 export type ResponseUpdateWithoutQuestionInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  source?: Prisma.EnumResponseSourceFieldUpdateOperationsInput | $Enums.ResponseSource
   ipHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userAgentHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1380,6 +1439,7 @@ export type ResponseUpdateWithoutQuestionInput = {
 export type ResponseUncheckedUpdateWithoutQuestionInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   pollId?: Prisma.StringFieldUpdateOperationsInput | string
+  source?: Prisma.EnumResponseSourceFieldUpdateOperationsInput | $Enums.ResponseSource
   optionId?: Prisma.StringFieldUpdateOperationsInput | string
   participantId?: Prisma.StringFieldUpdateOperationsInput | string
   countyId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1393,6 +1453,7 @@ export type ResponseUncheckedUpdateWithoutQuestionInput = {
 export type ResponseUncheckedUpdateManyWithoutQuestionInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   pollId?: Prisma.StringFieldUpdateOperationsInput | string
+  source?: Prisma.EnumResponseSourceFieldUpdateOperationsInput | $Enums.ResponseSource
   optionId?: Prisma.StringFieldUpdateOperationsInput | string
   participantId?: Prisma.StringFieldUpdateOperationsInput | string
   countyId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1406,6 +1467,7 @@ export type ResponseUncheckedUpdateManyWithoutQuestionInput = {
 export type ResponseCreateManyOptionInput = {
   id?: string
   pollId: string
+  source?: $Enums.ResponseSource
   questionId: string
   participantId: string
   countyId?: string | null
@@ -1418,6 +1480,7 @@ export type ResponseCreateManyOptionInput = {
 
 export type ResponseUpdateWithoutOptionInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  source?: Prisma.EnumResponseSourceFieldUpdateOperationsInput | $Enums.ResponseSource
   ipHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userAgentHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1432,6 +1495,7 @@ export type ResponseUpdateWithoutOptionInput = {
 export type ResponseUncheckedUpdateWithoutOptionInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   pollId?: Prisma.StringFieldUpdateOperationsInput | string
+  source?: Prisma.EnumResponseSourceFieldUpdateOperationsInput | $Enums.ResponseSource
   questionId?: Prisma.StringFieldUpdateOperationsInput | string
   participantId?: Prisma.StringFieldUpdateOperationsInput | string
   countyId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1445,6 +1509,7 @@ export type ResponseUncheckedUpdateWithoutOptionInput = {
 export type ResponseUncheckedUpdateManyWithoutOptionInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   pollId?: Prisma.StringFieldUpdateOperationsInput | string
+  source?: Prisma.EnumResponseSourceFieldUpdateOperationsInput | $Enums.ResponseSource
   questionId?: Prisma.StringFieldUpdateOperationsInput | string
   participantId?: Prisma.StringFieldUpdateOperationsInput | string
   countyId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1458,6 +1523,7 @@ export type ResponseUncheckedUpdateManyWithoutOptionInput = {
 export type ResponseCreateManyParticipantInput = {
   id?: string
   pollId: string
+  source?: $Enums.ResponseSource
   questionId: string
   optionId: string
   countyId?: string | null
@@ -1470,6 +1536,7 @@ export type ResponseCreateManyParticipantInput = {
 
 export type ResponseUpdateWithoutParticipantInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  source?: Prisma.EnumResponseSourceFieldUpdateOperationsInput | $Enums.ResponseSource
   ipHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userAgentHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1484,6 +1551,7 @@ export type ResponseUpdateWithoutParticipantInput = {
 export type ResponseUncheckedUpdateWithoutParticipantInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   pollId?: Prisma.StringFieldUpdateOperationsInput | string
+  source?: Prisma.EnumResponseSourceFieldUpdateOperationsInput | $Enums.ResponseSource
   questionId?: Prisma.StringFieldUpdateOperationsInput | string
   optionId?: Prisma.StringFieldUpdateOperationsInput | string
   countyId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1497,6 +1565,7 @@ export type ResponseUncheckedUpdateWithoutParticipantInput = {
 export type ResponseUncheckedUpdateManyWithoutParticipantInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   pollId?: Prisma.StringFieldUpdateOperationsInput | string
+  source?: Prisma.EnumResponseSourceFieldUpdateOperationsInput | $Enums.ResponseSource
   questionId?: Prisma.StringFieldUpdateOperationsInput | string
   optionId?: Prisma.StringFieldUpdateOperationsInput | string
   countyId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1512,6 +1581,7 @@ export type ResponseUncheckedUpdateManyWithoutParticipantInput = {
 export type ResponseSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   pollId?: boolean
+  source?: boolean
   questionId?: boolean
   optionId?: boolean
   participantId?: boolean
@@ -1533,6 +1603,7 @@ export type ResponseSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
 export type ResponseSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   pollId?: boolean
+  source?: boolean
   questionId?: boolean
   optionId?: boolean
   participantId?: boolean
@@ -1554,6 +1625,7 @@ export type ResponseSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
 export type ResponseSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   pollId?: boolean
+  source?: boolean
   questionId?: boolean
   optionId?: boolean
   participantId?: boolean
@@ -1575,6 +1647,7 @@ export type ResponseSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
 export type ResponseSelectScalar = {
   id?: boolean
   pollId?: boolean
+  source?: boolean
   questionId?: boolean
   optionId?: boolean
   participantId?: boolean
@@ -1586,7 +1659,7 @@ export type ResponseSelectScalar = {
   createdAt?: boolean
 }
 
-export type ResponseOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "pollId" | "questionId" | "optionId" | "participantId" | "countyId" | "constituencyId" | "wardId" | "ipHash" | "userAgentHash" | "createdAt", ExtArgs["result"]["response"]>
+export type ResponseOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "pollId" | "source" | "questionId" | "optionId" | "participantId" | "countyId" | "constituencyId" | "wardId" | "ipHash" | "userAgentHash" | "createdAt", ExtArgs["result"]["response"]>
 export type ResponseInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   poll?: boolean | Prisma.PollDefaultArgs<ExtArgs>
   question?: boolean | Prisma.PollQuestionDefaultArgs<ExtArgs>
@@ -1629,6 +1702,7 @@ export type $ResponsePayload<ExtArgs extends runtime.Types.Extensions.InternalAr
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     pollId: string
+    source: $Enums.ResponseSource
     questionId: string
     optionId: string
     participantId: string
@@ -2070,6 +2144,7 @@ export interface Prisma__ResponseClient<T, Null = never, ExtArgs extends runtime
 export interface ResponseFieldRefs {
   readonly id: Prisma.FieldRef<"Response", 'String'>
   readonly pollId: Prisma.FieldRef<"Response", 'String'>
+  readonly source: Prisma.FieldRef<"Response", 'ResponseSource'>
   readonly questionId: Prisma.FieldRef<"Response", 'String'>
   readonly optionId: Prisma.FieldRef<"Response", 'String'>
   readonly participantId: Prisma.FieldRef<"Response", 'String'>

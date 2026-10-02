@@ -1506,6 +1506,7 @@ export type ParticipantScalarFieldEnum = (typeof ParticipantScalarFieldEnum)[key
 export const ResponseScalarFieldEnum = {
   id: 'id',
   pollId: 'pollId',
+  source: 'source',
   questionId: 'questionId',
   optionId: 'optionId',
   participantId: 'participantId',
@@ -1652,6 +1653,20 @@ export type EnumPollStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$Prism
  * Reference to a field of type 'PollStatus[]'
  */
 export type ListEnumPollStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PollStatus[]'>
+    
+
+
+/**
+ * Reference to a field of type 'ResponseSource'
+ */
+export type EnumResponseSourceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ResponseSource'>
+    
+
+
+/**
+ * Reference to a field of type 'ResponseSource[]'
+ */
+export type ListEnumResponseSourceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ResponseSource[]'>
     
 
 

@@ -536,3 +536,28 @@ export async function deleteOption(
     }
   );
 }
+
+/**
+ * Record a respondent's answers collected
+ * through an authorized agent.
+ */
+export async function recordAgentResponse(
+  pollId: string,
+  payload: {
+    countyId: string;
+    constituencyId: string;
+    wardId: string;
+    answers: {
+      questionId: string;
+      optionId: string;
+    }[];
+  }
+) {
+  return adminFetch(
+    `/agent-responses/${pollId}`,
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }
+  );
+}

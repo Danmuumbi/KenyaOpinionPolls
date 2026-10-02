@@ -232,6 +232,7 @@ export type ParticipantScalarFieldEnum = (typeof ParticipantScalarFieldEnum)[key
 export const ResponseScalarFieldEnum = {
   id: 'id',
   pollId: 'pollId',
+  source: 'source',
   questionId: 'questionId',
   optionId: 'optionId',
   participantId: 'participantId',

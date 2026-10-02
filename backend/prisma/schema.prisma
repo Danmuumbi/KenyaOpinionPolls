@@ -37,6 +37,12 @@ enum UserRole {
   ANALYST
 }
 
+enum ResponseSource {
+  ONLINE
+  AGENT
+  TEST
+}
+
 model County {
   id   String @id @default(cuid())
   code Int    @unique
@@ -272,6 +278,7 @@ model Response {
 
   pollId String
   poll   Poll   @relation(fields: [pollId], references: [id], onDelete: Cascade)
+    source ResponseSource @default(ONLINE)
 
   questionId String
   question   PollQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
