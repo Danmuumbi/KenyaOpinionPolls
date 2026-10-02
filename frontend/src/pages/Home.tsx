@@ -1253,7 +1253,7 @@ const [candidatePages, setCandidatePages] =
       <>
         <div className="candidate-strip">
 
-          {/* {visibleCandidates.map(
+          {visibleCandidates.map(
             (candidate) => (
 
               <Link
@@ -1262,7 +1262,7 @@ const [candidatePages, setCandidatePages] =
                 to={`/polls/position/${position.id}`}
               >
 
-                {candidate.photoUrl ? (
+                {/* {candidate.photoUrl ? (
                   <img
                     src={candidate.photoUrl}
                     alt={candidate.name}
