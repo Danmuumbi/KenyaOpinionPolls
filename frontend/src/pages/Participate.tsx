@@ -809,10 +809,10 @@ export default function Participate() {
                             </div>
 
                             <span className="other-help">
-                              Once added, the
+                              The
                               candidate becomes
                               available as an option
-                              for this poll.
+                              for this poll.Reload the page after adding your candidate to vote for him/her
                             </span>
                           </div>
                         )}
