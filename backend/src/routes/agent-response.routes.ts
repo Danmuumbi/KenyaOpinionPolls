@@ -4,6 +4,8 @@ import { randomBytes, createHash } from "crypto";
 import { prisma } from "../config/database";
 import { requireAuth } from "../middleware/auth.middleware";
 
+import type { Prisma } from "../generated/prisma/client";
+
 const router = Router();
 
 /**
@@ -27,6 +29,8 @@ function hashValue(value: string): string {
     .update(`${secret}:${value}`)
     .digest("hex");
 }
+
+
 
 /**
  * POST /api/agent-responses/:pollId
@@ -54,7 +58,14 @@ router.post(
   requireAuth,
   async (req, res) => {
     try {
-      const { pollId } = req.params;
+      const pollId = req.params.pollId;
+
+if (typeof pollId !== "string" || !pollId.trim()) {
+  return res.status(400).json({
+    success: false,
+    message: "A valid poll ID is required",
+  });
+}
 
       const {
         countyId,
@@ -114,45 +125,52 @@ router.post(
        */
       const now = new Date();
 
-      const poll =
-        await prisma.poll.findFirst({
-          where: {
-            id: pollId,
-            status: "ACTIVE",
-            OR: [
-              {
-                startsAt: null,
-              },
-              {
-                startsAt: {
-                  lte: now,
-                },
-              },
-            ],
-            AND: [
-              {
-                OR: [
-                  {
-                    endsAt: null,
-                  },
-                  {
-                    endsAt: {
-                      gte: now,
-                    },
-                  },
-                ],
-              },
-            ],
+      const poll: Prisma.PollGetPayload<{
+  include: {
+    questions: {
+      include: {
+        options: true;
+      };
+    };
+  };
+}> | null = await prisma.poll.findFirst({
+  where: {
+    id: pollId,
+    status: "ACTIVE",
+    OR: [
+      {
+        startsAt: null,
+      },
+      {
+        startsAt: {
+          lte: now,
+        },
+      },
+    ],
+    AND: [
+      {
+        OR: [
+          {
+            endsAt: null,
           },
-
-          include: {
-            questions: {
-              include: {
-                options: true,
-              },
+          {
+            endsAt: {
+              gte: now,
             },
           },
-        });
+        ],
+      },
+    ],
+  },
+
+  include: {
+    questions: {
+      include: {
+        options: true,
+      },
+    },
+  },
+});
 
       if (!poll) {
         return res.status(400).json({
