@@ -419,6 +419,30 @@ export default function Dashboard() {
               </span>
             </Link>
 
+
+            <Link
+              to="/admin/agent-responses"
+              className="dashboard-action"
+            >
+              <span className="dashboard-action__number">
+                05
+              </span>
+
+              <span className="dashboard-action__content">
+                <strong>
+                  Agent Responses
+                </strong>
+
+                <small>
+                  Control responses highlighted Nanually
+                </small>
+              </span>
+
+              <span className="dashboard-action__arrow">
+                →
+              </span>
+            </Link>
+
           </div>
         </section>
 
