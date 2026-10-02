@@ -1262,7 +1262,7 @@ const [candidatePages, setCandidatePages] =
                 to={`/polls/position/${position.id}`}
               >
 
-                {/* {candidate.photoUrl ? (
+                {candidate.photoUrl ? (
                   <img
                     src={candidate.photoUrl}
                     alt={candidate.name}
@@ -1274,7 +1274,7 @@ const [candidatePages, setCandidatePages] =
                   <div className="candidate-placeholder">
                     No image
                   </div>
-                )} */}
+                )}
 
                 <h4>
                   {candidate.name}
