@@ -28,6 +28,8 @@ import About from "./pages/About";
 import Services from "./pages/Services";
 import EditPoll from "./pages/EditPoll";
 
+import AgentResponses from "./pages/AgentResponses";
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -139,6 +141,11 @@ export default function App() {
 <Route
   path="/admin/featured-polls"
   element={<FeaturedPolls />}
+/>
+
+<Route
+  path="/admin/agent-responses"
+  element={<AgentResponses />}
 />
 
           <Route
