@@ -22,7 +22,8 @@ import type {
 
 import "./AdminCandidates.css";
 
-const API_URL = "http://localhost:5000/api";
+const API_URL =
+  "https://kenyaopinionpolls.onrender.com/api";
 
 const PAGE_SIZE_OPTIONS = [25, 50, 100];
 
