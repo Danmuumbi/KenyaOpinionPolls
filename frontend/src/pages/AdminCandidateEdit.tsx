@@ -1,3 +1,4 @@
+
 import {
   useEffect,
   useState,
@@ -23,10 +24,8 @@ import type {
 
 import "./AdminCandidateEdit.css";
 
-const API_URL = "https://kenyaopinionpolls.onrender.com/api";
-// const API_URL = "https://kenyaopinionpolls.onrender.com/api";
-
-
+const API_URL =
+  "https://kenyaopinionpolls.onrender.com/api";
 
 interface County {
   id: string;
@@ -48,14 +47,14 @@ interface Ward {
   constituencyId: string;
 }
 
-/* -------------------------------------------------------------------------- */
-/* Geography helper                                                           */
-/* -------------------------------------------------------------------------- */
-
 async function fetchGeography<T>(
   endpoint: string
 ): Promise<T[]> {
   const token = localStorage.getItem("token");
+
+  if (!token) {
+    throw new Error("Authentication required. Please log in again.");
+  }
 
   const response = await fetch(
     `${API_URL}${endpoint}`,
@@ -70,10 +69,8 @@ async function fetchGeography<T>(
     response.headers.get("content-type") || "";
 
   if (!contentType.includes("application/json")) {
-    await response.text();
-
     throw new Error(
-      `Request failed (${response.status}).`
+      `Geography request failed (${response.status}).`
     );
   }
 
@@ -81,23 +78,17 @@ async function fetchGeography<T>(
 
   if (!response.ok) {
     throw new Error(
-      data?.message ||
-        "Failed to load geography"
+      data?.message || "Failed to load geography."
     );
   }
 
   return data.data as T[];
 }
 
-/* -------------------------------------------------------------------------- */
-/* Edit Candidate                                                             */
-/* -------------------------------------------------------------------------- */
-
 export default function AdminCandidateEdit() {
-  const { candidateId } =
-    useParams<{
-      candidateId: string;
-    }>();
+  const { candidateId } = useParams<{
+    candidateId: string;
+  }>();
 
   const [candidate, setCandidate] =
     useState<AdminCandidate | null>(null);
@@ -108,70 +99,41 @@ export default function AdminCandidateEdit() {
   const [counties, setCounties] =
     useState<County[]>([]);
 
-  const [
-    constituencies,
-    setConstituencies,
-  ] = useState<Constituency[]>([]);
+  const [constituencies, setConstituencies] =
+    useState<Constituency[]>([]);
 
   const [wards, setWards] =
     useState<Ward[]>([]);
 
-  const [name, setName] =
-    useState("");
+  const [name, setName] = useState("");
+  const [party, setParty] = useState("");
+  const [photoUrl, setPhotoUrl] = useState("");
+  const [description, setDescription] = useState("");
 
-  const [party, setParty] =
-    useState("");
+  const [positionId, setPositionId] = useState("");
+  const [countyId, setCountyId] = useState("");
+  const [constituencyId, setConstituencyId] = useState("");
+  const [wardId, setWardId] = useState("");
 
-  const [photoUrl, setPhotoUrl] =
-    useState("");
+  const [isActive, setIsActive] = useState(true);
 
-  const [description, setDescription] =
-    useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  const [positionId, setPositionId] =
-    useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
-  const [countyId, setCountyId] =
-    useState("");
-
-  const [
-    constituencyId,
-    setConstituencyId,
-  ] = useState("");
-
-  const [wardId, setWardId] =
-    useState("");
-
-  const [isActive, setIsActive] =
-    useState(true);
-
-  const [loading, setLoading] =
-    useState(true);
-
-  const [saving, setSaving] =
-    useState(false);
-
-  const [error, setError] =
-    useState("");
-
-  const [success, setSuccess] =
-    useState("");
-
-  /* ------------------------------------------------------------------------ */
-  /* Load candidate                                                            */
-  /* ------------------------------------------------------------------------ */
-
+  // Load candidate and supporting data
   useEffect(() => {
+    let cancelled = false;
+
     async function loadCandidate() {
       try {
         setLoading(true);
         setError("");
 
         if (!candidateId) {
-          setError(
-            "Candidate ID is missing."
-          );
-          return;
+          throw new Error("Candidate ID is missing.");
         }
 
         const [
@@ -181,78 +143,41 @@ export default function AdminCandidateEdit() {
         ] = await Promise.all([
           getCandidates(),
           getAdminPositions(),
-          fetchGeography<County>(
-            "/geography/counties"
-          ),
+          fetchGeography<County>("/geography/counties"),
         ]);
 
-        const foundCandidate =
-          candidateList.find(
-            (item) =>
-              item.id === candidateId
-          );
+        if (cancelled) return;
+
+        const foundCandidate = candidateList.find(
+          (item) => item.id === candidateId
+        );
 
         if (!foundCandidate) {
-          setError(
-            "Candidate not found."
+          throw new Error(
+            "The candidate was not returned by the server. Check the candidate API response and ID."
           );
-          return;
         }
 
-        setCandidate(
-          foundCandidate
-        );
+        setCandidate(foundCandidate);
+        setPositions(positionList);
+        setCounties(countyList);
 
-        setPositions(
-          positionList
-        );
+        setName(foundCandidate.name || "");
+        setParty(foundCandidate.party || "");
+        setPhotoUrl(foundCandidate.photoUrl || "");
+        setDescription(foundCandidate.description || "");
 
-        setCounties(
-          countyList
-        );
-
-        setName(
-          foundCandidate.name || ""
-        );
-
-        setParty(
-          foundCandidate.party || ""
-        );
-
-        setPhotoUrl(
-          foundCandidate.photoUrl ||
-            ""
-        );
-
-        setDescription(
-          foundCandidate.description ||
-            ""
-        );
-
-        setPositionId(
-          foundCandidate.positionId ||
-            ""
-        );
-
-        setCountyId(
-          foundCandidate.countyId ||
-            ""
-        );
-
+        setPositionId(foundCandidate.positionId || "");
+        setCountyId(foundCandidate.countyId || "");
         setConstituencyId(
-          foundCandidate.constituencyId ||
-            ""
+          foundCandidate.constituencyId || ""
         );
+        setWardId(foundCandidate.wardId || "");
 
-        setWardId(
-          foundCandidate.wardId ||
-            ""
-        );
-
-        setIsActive(
-          foundCandidate.isActive
-        );
+        setIsActive(foundCandidate.isActive);
       } catch (err) {
+        if (cancelled) return;
+
         console.error(
           "Failed to load candidate:",
           err
@@ -261,21 +186,26 @@ export default function AdminCandidateEdit() {
         setError(
           err instanceof Error
             ? err.message
-            : "Failed to load candidate"
+            : "Failed to load candidate."
         );
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     }
 
     loadCandidate();
+
+    return () => {
+      cancelled = true;
+    };
   }, [candidateId]);
 
-  /* ------------------------------------------------------------------------ */
-  /* Load constituencies                                                       */
-  /* ------------------------------------------------------------------------ */
-
+  // Load constituencies
   useEffect(() => {
+    let cancelled = false;
+
     if (!countyId) {
       setConstituencies([]);
       return;
@@ -288,8 +218,12 @@ export default function AdminCandidateEdit() {
             `/geography/counties/${countyId}/constituencies`
           );
 
-        setConstituencies(data);
+        if (!cancelled) {
+          setConstituencies(data);
+        }
       } catch (err) {
+        if (cancelled) return;
+
         console.error(
           "Failed to load constituencies:",
           err
@@ -298,19 +232,22 @@ export default function AdminCandidateEdit() {
         setError(
           err instanceof Error
             ? err.message
-            : "Failed to load constituencies"
+            : "Failed to load constituencies."
         );
       }
     }
 
     loadConstituencies();
+
+    return () => {
+      cancelled = true;
+    };
   }, [countyId]);
 
-  /* ------------------------------------------------------------------------ */
-  /* Load wards                                                               */
-  /* ------------------------------------------------------------------------ */
-
+  // Load wards
   useEffect(() => {
+    let cancelled = false;
+
     if (!constituencyId) {
       setWards([]);
       return;
@@ -323,8 +260,12 @@ export default function AdminCandidateEdit() {
             `/geography/constituencies/${constituencyId}/wards`
           );
 
-        setWards(data);
+        if (!cancelled) {
+          setWards(data);
+        }
       } catch (err) {
+        if (cancelled) return;
+
         console.error(
           "Failed to load wards:",
           err
@@ -333,26 +274,23 @@ export default function AdminCandidateEdit() {
         setError(
           err instanceof Error
             ? err.message
-            : "Failed to load wards"
+            : "Failed to load wards."
         );
       }
     }
 
     loadWards();
+
+    return () => {
+      cancelled = true;
+    };
   }, [constituencyId]);
 
-  /* ------------------------------------------------------------------------ */
-  /* Position scope                                                           */
-  /* ------------------------------------------------------------------------ */
+  const selectedPosition = positions.find(
+    (position) => position.id === positionId
+  );
 
-  const selectedPosition =
-    positions.find(
-      (position) =>
-        position.id === positionId
-    );
-
-  const scope =
-    selectedPosition?.scope || "";
+  const scope = selectedPosition?.scope || "";
 
   const requiresCounty =
     scope === "COUNTY" ||
@@ -363,26 +301,16 @@ export default function AdminCandidateEdit() {
     scope === "CONSTITUENCY" ||
     scope === "WARD";
 
-  const requiresWard =
-    scope === "WARD";
+  const requiresWard = scope === "WARD";
 
-  /* ------------------------------------------------------------------------ */
-  /* Position change                                                          */
-  /* ------------------------------------------------------------------------ */
-
-  function handlePositionChange(
-    value: string
-  ) {
+  function handlePositionChange(value: string) {
     setPositionId(value);
 
-    const position =
-      positions.find(
-        (item) =>
-          item.id === value
-      );
+    const position = positions.find(
+      (item) => item.id === value
+    );
 
-    const newScope =
-      position?.scope || "";
+    const newScope = position?.scope || "";
 
     if (
       newScope !== "COUNTY" &&
@@ -392,44 +320,24 @@ export default function AdminCandidateEdit() {
       setCountyId("");
       setConstituencyId("");
       setWardId("");
-    } else if (
-      newScope === "COUNTY"
-    ) {
+    } else if (newScope === "COUNTY") {
       setConstituencyId("");
       setWardId("");
-    } else if (
-      newScope === "CONSTITUENCY"
-    ) {
+    } else if (newScope === "CONSTITUENCY") {
       setWardId("");
     }
   }
 
-  /* ------------------------------------------------------------------------ */
-  /* County change                                                            */
-  /* ------------------------------------------------------------------------ */
-
-  function handleCountyChange(
-    value: string
-  ) {
+  function handleCountyChange(value: string) {
     setCountyId(value);
     setConstituencyId("");
     setWardId("");
   }
 
-  /* ------------------------------------------------------------------------ */
-  /* Constituency change                                                      */
-  /* ------------------------------------------------------------------------ */
-
-  function handleConstituencyChange(
-    value: string
-  ) {
+  function handleConstituencyChange(value: string) {
     setConstituencyId(value);
     setWardId("");
   }
-
-  /* ------------------------------------------------------------------------ */
-  /* Save                                                                      */
-  /* ------------------------------------------------------------------------ */
 
   async function handleSubmit(
     event: FormEvent
@@ -440,30 +348,21 @@ export default function AdminCandidateEdit() {
     setSuccess("");
 
     if (!candidateId) {
-      setError(
-        "Candidate ID is missing."
-      );
+      setError("Candidate ID is missing.");
       return;
     }
 
     if (!name.trim()) {
-      setError(
-        "Candidate name is required."
-      );
+      setError("Candidate name is required.");
       return;
     }
 
     if (!positionId) {
-      setError(
-        "Position is required."
-      );
+      setError("Position is required.");
       return;
     }
 
-    if (
-      requiresCounty &&
-      !countyId
-    ) {
+    if (requiresCounty && !countyId) {
       setError(
         "County is required for this position."
       );
@@ -480,10 +379,7 @@ export default function AdminCandidateEdit() {
       return;
     }
 
-    if (
-      requiresWard &&
-      !wardId
-    ) {
+    if (requiresWard && !wardId) {
       setError(
         "Ward is required for this position."
       );
@@ -499,39 +395,28 @@ export default function AdminCandidateEdit() {
           {
             name: name.trim(),
 
-            party:
-              party.trim() ||
-              undefined,
+            party: party.trim() || undefined,
 
             photoUrl:
-              photoUrl.trim() ||
-              undefined,
+              photoUrl.trim() || undefined,
 
             description:
-              description.trim() ||
-              undefined,
+              description.trim() || undefined,
 
             positionId,
 
-            countyId:
-              countyId ||
-              undefined,
+            countyId: countyId || undefined,
 
             constituencyId:
-              constituencyId ||
-              undefined,
+              constituencyId || undefined,
 
-            wardId:
-              wardId ||
-              undefined,
+            wardId: wardId || undefined,
 
             isActive,
           }
         );
 
-      setCandidate(
-        updatedCandidate
-      );
+      setCandidate(updatedCandidate);
 
       setSuccess(
         "Candidate updated successfully."
@@ -545,16 +430,12 @@ export default function AdminCandidateEdit() {
       setError(
         err instanceof Error
           ? err.message
-          : "Failed to update candidate"
+          : "Failed to update candidate."
       );
     } finally {
       setSaving(false);
     }
   }
-
-  /* ------------------------------------------------------------------------ */
-  /* Loading                                                                   */
-  /* ------------------------------------------------------------------------ */
 
   if (loading) {
     return (
@@ -571,10 +452,6 @@ export default function AdminCandidateEdit() {
       </main>
     );
   }
-
-  /* ------------------------------------------------------------------------ */
-  /* Not found                                                                 */
-  /* ------------------------------------------------------------------------ */
 
   if (!candidate) {
     return (
@@ -596,9 +473,7 @@ export default function AdminCandidateEdit() {
               Candidate management
             </p>
 
-            <h1>
-              Candidate not found
-            </h1>
+            <h1>Candidate not found</h1>
 
             <p>
               {error ||
@@ -622,28 +497,20 @@ export default function AdminCandidateEdit() {
       .trim()
       .split(/\s+/)
       .slice(0, 2)
-      .map((part) =>
-        part.charAt(0).toUpperCase()
-      )
+      .map((part) => part.charAt(0).toUpperCase())
       .join("") || "?";
 
-  const countyName =
-    counties.find(
-      (item) =>
-        item.id === countyId
-    )?.name;
+  const countyName = counties.find(
+    (item) => item.id === countyId
+  )?.name;
 
-  const constituencyName =
-    constituencies.find(
-      (item) =>
-        item.id === constituencyId
-    )?.name;
+  const constituencyName = constituencies.find(
+    (item) => item.id === constituencyId
+  )?.name;
 
-  const wardName =
-    wards.find(
-      (item) =>
-        item.id === wardId
-    )?.name;
+  const wardName = wards.find(
+    (item) => item.id === wardId
+  )?.name;
 
   const locationParts = [
     wardName,
@@ -654,10 +521,6 @@ export default function AdminCandidateEdit() {
   return (
     <main className="candidate-edit-page">
       <div className="candidate-edit-shell">
-
-        {/* ---------------------------------------------------------------- */}
-        {/* Top navigation                                                    */}
-        {/* ---------------------------------------------------------------- */}
 
         <div className="candidate-edit-topbar">
           <Link
@@ -674,19 +537,13 @@ export default function AdminCandidateEdit() {
           </div>
         </div>
 
-        {/* ---------------------------------------------------------------- */}
-        {/* Page heading                                                      */}
-        {/* ---------------------------------------------------------------- */}
-
         <header className="candidate-edit-header">
           <div>
             <p className="candidate-edit-eyebrow">
               SFD Insights / Candidate management
             </p>
 
-            <h1>
-              Edit candidate
-            </h1>
+            <h1>Edit candidate</h1>
 
             <p className="candidate-edit-header-copy">
               Update the candidate profile,
@@ -703,15 +560,9 @@ export default function AdminCandidateEdit() {
             }`}
           >
             <span />
-            {isActive
-              ? "Active"
-              : "Inactive"}
+            {isActive ? "Active" : "Inactive"}
           </div>
         </header>
-
-        {/* ---------------------------------------------------------------- */}
-        {/* Notices                                                           */}
-        {/* ---------------------------------------------------------------- */}
 
         {error && (
           <div
@@ -723,10 +574,7 @@ export default function AdminCandidateEdit() {
             </span>
 
             <div>
-              <strong>
-                Unable to save
-              </strong>
-
+              <strong>Unable to save</strong>
               <p>{error}</p>
             </div>
           </div>
@@ -742,10 +590,7 @@ export default function AdminCandidateEdit() {
             </span>
 
             <div>
-              <strong>
-                Changes saved
-              </strong>
-
+              <strong>Changes saved</strong>
               <p>{success}</p>
             </div>
           </div>
@@ -755,13 +600,7 @@ export default function AdminCandidateEdit() {
           onSubmit={handleSubmit}
           className="candidate-edit-form"
         >
-
-          {/* ============================================================= */}
-          {/* Profile overview                                               */}
-          {/* ============================================================= */}
-
           <section className="candidate-edit-profile">
-
             <div className="candidate-edit-profile-visual">
               {photoUrl ? (
                 <img
@@ -773,15 +612,11 @@ export default function AdminCandidateEdit() {
                   }}
                 />
               ) : (
-                <span>
-                  {initials}
-                </span>
+                <span>{initials}</span>
               )}
 
               <div className="candidate-edit-profile-badge">
-                {isActive
-                  ? "LIVE"
-                  : "OFF"}
+                {isActive ? "LIVE" : "OFF"}
               </div>
             </div>
 
@@ -790,10 +625,7 @@ export default function AdminCandidateEdit() {
                 Candidate profile
               </p>
 
-              <h2>
-                {name ||
-                  "Unnamed candidate"}
-              </h2>
+              <h2>{name || "Unnamed candidate"}</h2>
 
               <div className="candidate-edit-profile-meta">
                 <span>
@@ -815,38 +647,19 @@ export default function AdminCandidateEdit() {
                     ⌖
                   </span>
 
-                  {locationParts.join(
-                    " · "
-                  )}
+                  {locationParts.join(" · ")}
                 </div>
               )}
             </div>
 
             <div className="candidate-edit-profile-id">
               <span>Record</span>
-              <code>
-                {candidate.id.slice(
-                  0,
-                  10
-                )}
-                …
-              </code>
+              <code>{candidate.id.slice(0, 10)}…</code>
             </div>
           </section>
 
-          {/* ============================================================= */}
-          {/* Main editing grid                                              */}
-          {/* ============================================================= */}
-
           <div className="candidate-edit-grid">
-
-            {/* =========================================================== */}
-            {/* Main column                                                   */}
-            {/* =========================================================== */}
-
             <div className="candidate-edit-main-column">
-
-              {/* Basic information */}
 
               <section className="candidate-edit-section">
                 <div className="candidate-edit-section-heading">
@@ -856,10 +669,7 @@ export default function AdminCandidateEdit() {
                     </span>
 
                     <div>
-                      <h2>
-                        Identity
-                      </h2>
-
+                      <h2>Identity</h2>
                       <p>
                         The information displayed
                         for this candidate.
@@ -869,11 +679,9 @@ export default function AdminCandidateEdit() {
                 </div>
 
                 <div className="candidate-edit-fields">
-
                   <div className="candidate-edit-field candidate-edit-field--wide">
                     <label htmlFor="candidate-name">
-                      Candidate name
-                      <span>*</span>
+                      Candidate name <span>*</span>
                     </label>
 
                     <input
@@ -881,9 +689,7 @@ export default function AdminCandidateEdit() {
                       type="text"
                       value={name}
                       onChange={(event) =>
-                        setName(
-                          event.target.value
-                        )
+                        setName(event.target.value)
                       }
                       autoComplete="name"
                     />
@@ -899,9 +705,7 @@ export default function AdminCandidateEdit() {
                       type="text"
                       value={party}
                       onChange={(event) =>
-                        setParty(
-                          event.target.value
-                        )
+                        setParty(event.target.value)
                       }
                       placeholder="Political party"
                     />
@@ -917,9 +721,7 @@ export default function AdminCandidateEdit() {
                       type="url"
                       value={photoUrl}
                       onChange={(event) =>
-                        setPhotoUrl(
-                          event.target.value
-                        )
+                        setPhotoUrl(event.target.value)
                       }
                       placeholder="https://..."
                     />
@@ -930,11 +732,8 @@ export default function AdminCandidateEdit() {
                       from this address.
                     </span>
                   </div>
-
                 </div>
               </section>
-
-              {/* Position */}
 
               <section className="candidate-edit-section">
                 <div className="candidate-edit-section-heading">
@@ -944,10 +743,7 @@ export default function AdminCandidateEdit() {
                     </span>
 
                     <div>
-                      <h2>
-                        Electoral position
-                      </h2>
-
+                      <h2>Electoral position</h2>
                       <p>
                         Assign the position this
                         candidate belongs to.
@@ -957,11 +753,9 @@ export default function AdminCandidateEdit() {
                 </div>
 
                 <div className="candidate-edit-position-control">
-
                   <div className="candidate-edit-field">
                     <label htmlFor="candidate-position">
-                      Position
-                      <span>*</span>
+                      Position <span>*</span>
                     </label>
 
                     <select
@@ -979,53 +773,38 @@ export default function AdminCandidateEdit() {
 
                       {positions
                         .filter(
-                          (position) =>
-                            position.isActive
+                          (position) => position.isActive
                         )
-                        .map(
-                          (position) => (
-                            <option
-                              key={
-                                position.id
-                              }
-                              value={
-                                position.id
-                              }
-                            >
-                              {position.name}
-                            </option>
-                          )
-                        )}
+                        .map((position) => (
+                          <option
+                            key={position.id}
+                            value={position.id}
+                          >
+                            {position.name}
+                          </option>
+                        ))}
                     </select>
                   </div>
 
                   <div className="candidate-edit-scope-preview">
-                    <span>
-                      Required scope
-                    </span>
+                    <span>Required scope</span>
 
                     <strong>
-                      {scope ||
-                        "Not defined"}
+                      {scope || "Not defined"}
                     </strong>
 
                     <small>
                       {scope === "WARD"
                         ? "County → Constituency → Ward"
-                        : scope ===
-                          "CONSTITUENCY"
+                        : scope === "CONSTITUENCY"
                         ? "County → Constituency"
-                        : scope ===
-                          "COUNTY"
+                        : scope === "COUNTY"
                         ? "County"
                         : "No geographic scope"}
                     </small>
                   </div>
-
                 </div>
               </section>
-
-              {/* Geography */}
 
               <section className="candidate-edit-section">
                 <div className="candidate-edit-section-heading">
@@ -1035,10 +814,7 @@ export default function AdminCandidateEdit() {
                     </span>
 
                     <div>
-                      <h2>
-                        Geographic scope
-                      </h2>
-
+                      <h2>Geographic scope</h2>
                       <p>
                         Define where this candidate
                         belongs.
@@ -1048,21 +824,16 @@ export default function AdminCandidateEdit() {
                 </div>
 
                 <div className="candidate-edit-location-chain">
-
                   <div className="candidate-edit-field">
                     <label htmlFor="candidate-county">
                       County
-                      {requiresCounty && (
-                        <span>*</span>
-                      )}
+                      {requiresCounty && <span>*</span>}
                     </label>
 
                     <select
                       id="candidate-county"
                       value={countyId}
-                      disabled={
-                        !requiresCounty
-                      }
+                      disabled={!requiresCounty}
                       onChange={(event) =>
                         handleCountyChange(
                           event.target.value
@@ -1075,20 +846,14 @@ export default function AdminCandidateEdit() {
                           : "Not required"}
                       </option>
 
-                      {counties.map(
-                        (county) => (
-                          <option
-                            key={
-                              county.id
-                            }
-                            value={
-                              county.id
-                            }
-                          >
-                            {county.name}
-                          </option>
-                        )
-                      )}
+                      {counties.map((county) => (
+                        <option
+                          key={county.id}
+                          value={county.id}
+                        >
+                          {county.name}
+                        </option>
+                      ))}
                     </select>
                   </div>
 
@@ -1106,12 +871,9 @@ export default function AdminCandidateEdit() {
 
                     <select
                       id="candidate-constituency"
-                      value={
-                        constituencyId
-                      }
+                      value={constituencyId}
                       disabled={
-                        !requiresConstituency ||
-                        !countyId
+                        !requiresConstituency || !countyId
                       }
                       onChange={(event) =>
                         handleConstituencyChange(
@@ -1126,20 +888,12 @@ export default function AdminCandidateEdit() {
                       </option>
 
                       {constituencies.map(
-                        (
-                          constituency
-                        ) => (
+                        (constituency) => (
                           <option
-                            key={
-                              constituency.id
-                            }
-                            value={
-                              constituency.id
-                            }
+                            key={constituency.id}
+                            value={constituency.id}
                           >
-                            {
-                              constituency.name
-                            }
+                            {constituency.name}
                           </option>
                         )
                       )}
@@ -1153,22 +907,17 @@ export default function AdminCandidateEdit() {
                   <div className="candidate-edit-field">
                     <label htmlFor="candidate-ward">
                       Ward
-                      {requiresWard && (
-                        <span>*</span>
-                      )}
+                      {requiresWard && <span>*</span>}
                     </label>
 
                     <select
                       id="candidate-ward"
                       value={wardId}
                       disabled={
-                        !requiresWard ||
-                        !constituencyId
+                        !requiresWard || !constituencyId
                       }
                       onChange={(event) =>
-                        setWardId(
-                          event.target.value
-                        )
+                        setWardId(event.target.value)
                       }
                     >
                       <option value="">
@@ -1177,39 +926,27 @@ export default function AdminCandidateEdit() {
                           : "Not required"}
                       </option>
 
-                      {wards.map(
-                        (ward) => (
-                          <option
-                            key={ward.id}
-                            value={
-                              ward.id
-                            }
-                          >
-                            {ward.name}
-                          </option>
-                        )
-                      )}
+                      {wards.map((ward) => (
+                        <option
+                          key={ward.id}
+                          value={ward.id}
+                        >
+                          {ward.name}
+                        </option>
+                      ))}
                     </select>
                   </div>
-
                 </div>
 
                 {locationParts.length > 0 && (
                   <div className="candidate-edit-location-summary">
-                    <span>
-                      Current scope
-                    </span>
-
+                    <span>Current scope</span>
                     <strong>
-                      {locationParts.join(
-                        " / "
-                      )}
+                      {locationParts.join(" / ")}
                     </strong>
                   </div>
                 )}
               </section>
-
-              {/* Description */}
 
               <section className="candidate-edit-section">
                 <div className="candidate-edit-section-heading">
@@ -1219,10 +956,7 @@ export default function AdminCandidateEdit() {
                     </span>
 
                     <div>
-                      <h2>
-                        Description
-                      </h2>
-
+                      <h2>Description</h2>
                       <p>
                         Optional public-facing
                         candidate information.
@@ -1240,9 +974,7 @@ export default function AdminCandidateEdit() {
                     id="candidate-description"
                     value={description}
                     onChange={(event) =>
-                      setDescription(
-                        event.target.value
-                      )
+                      setDescription(event.target.value)
                     }
                     rows={6}
                     placeholder="Add a short, factual description..."
@@ -1255,17 +987,9 @@ export default function AdminCandidateEdit() {
                   </span>
                 </div>
               </section>
-
             </div>
 
-            {/* =========================================================== */}
-            {/* Side column                                                   */}
-            {/* =========================================================== */}
-
             <aside className="candidate-edit-sidebar">
-
-              {/* Visibility */}
-
               <section className="candidate-edit-side-section">
                 <p className="candidate-edit-side-label">
                   Public visibility
@@ -1278,14 +1002,8 @@ export default function AdminCandidateEdit() {
                       ? "candidate-edit-visibility--active"
                       : "candidate-edit-visibility--inactive"
                   }`}
-                  onClick={() =>
-                    setIsActive(
-                      !isActive
-                    )
-                  }
-                  aria-pressed={
-                    isActive
-                  }
+                  onClick={() => setIsActive(!isActive)}
+                  aria-pressed={isActive}
                 >
                   <span className="candidate-edit-toggle">
                     <span />
@@ -1293,9 +1011,7 @@ export default function AdminCandidateEdit() {
 
                   <span>
                     <strong>
-                      {isActive
-                        ? "Active"
-                        : "Inactive"}
+                      {isActive ? "Active" : "Inactive"}
                     </strong>
 
                     <small>
@@ -1313,20 +1029,14 @@ export default function AdminCandidateEdit() {
                 </p>
               </section>
 
-              {/* Candidate snapshot */}
-
               <section className="candidate-edit-side-section">
                 <p className="candidate-edit-side-label">
                   Current assignment
                 </p>
 
                 <div className="candidate-edit-assignment">
-
                   <div>
-                    <span>
-                      Position
-                    </span>
-
+                    <span>Position</span>
                     <strong>
                       {selectedPosition?.name ||
                         "Not assigned"}
@@ -1334,43 +1044,28 @@ export default function AdminCandidateEdit() {
                   </div>
 
                   <div>
-                    <span>
-                      Scope
-                    </span>
-
-                    <strong>
-                      {scope ||
-                        "None"}
-                    </strong>
+                    <span>Scope</span>
+                    <strong>{scope || "None"}</strong>
                   </div>
 
                   <div>
-                    <span>
-                      Location
-                    </span>
-
+                    <span>Location</span>
                     <strong>
                       {locationParts.length
                         ? locationParts[
-                            locationParts.length -
-                              1
+                            locationParts.length - 1
                           ]
                         : "Not assigned"}
                     </strong>
                   </div>
-
                 </div>
               </section>
-
-              {/* Important note */}
 
               <section className="candidate-edit-side-note">
                 <span>i</span>
 
                 <div>
-                  <strong>
-                    Historical responses
-                  </strong>
+                  <strong>Historical responses</strong>
 
                   <p>
                     Editing this record updates
@@ -1380,17 +1075,10 @@ export default function AdminCandidateEdit() {
                   </p>
                 </div>
               </section>
-
             </aside>
-
           </div>
 
-          {/* ============================================================= */}
-          {/* Action bar                                                      */}
-          {/* ============================================================= */}
-
           <div className="candidate-edit-actions">
-
             <div>
               <span className="candidate-edit-actions-indicator" />
 
@@ -1427,11 +1115,10 @@ export default function AdminCandidateEdit() {
                 )}
               </button>
             </div>
-
           </div>
-
         </form>
       </div>
     </main>
   );
 }
+
