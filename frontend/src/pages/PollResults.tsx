@@ -302,10 +302,10 @@ export default function PollResults() {
 
                           <div className="option-bottom">
 
-                            <span>
+                            {/* <span>
                               {option.count}{" "}
                               responses
-                            </span>
+                            </span> */}
 
                             <span>
                               {percentage}%
