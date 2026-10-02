@@ -24,6 +24,9 @@ import type {
 import "./AdminCandidateEdit.css";
 
 const API_URL = "https://kenyaopinionpolls.onrender.com/api";
+// const API_URL = "https://kenyaopinionpolls.onrender.com/api";
+
+
 
 interface County {
   id: string;
