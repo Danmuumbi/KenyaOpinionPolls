@@ -1253,7 +1253,7 @@ const [candidatePages, setCandidatePages] =
       <>
         <div className="candidate-strip">
 
-          {visibleCandidates.map(
+          {/* {visibleCandidates.map(
             (candidate) => (
 
               <Link
@@ -1263,18 +1263,18 @@ const [candidatePages, setCandidatePages] =
               >
 
                 {candidate.photoUrl ? (
-                  // <img
-                  //   src={candidate.photoUrl}
-                  //   alt={candidate.name}
-                  //   width="92"
-                  //   height="92"
-                  //   loading="lazy"
-                  // />
+                  <img
+                    src={candidate.photoUrl}
+                    alt={candidate.name}
+                    width="92"
+                    height="92"
+                    loading="lazy"
+                  />
                 ) : (
-                  // <div className="candidate-placeholder">
-                  //   No image
-                  // </div>
-                )}
+                  <div className="candidate-placeholder">
+                    No image
+                  </div>
+                )} */}
 
                 <h4>
                   {candidate.name}
